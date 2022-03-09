@@ -20,6 +20,9 @@
 composer require alizne/smsapi
 ```
 
+```
+php artisan vendor:publish --provider="Alizne\SmsApi\SmsApiServiceProvider"
+```
 ### پیش نیاز
 
 | پیش نیاز  | حداقل نسخه |
