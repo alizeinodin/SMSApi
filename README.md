@@ -30,3 +30,10 @@ php artisan vendor:publish --provider="Alizne\SmsApi\SmsApiServiceProvider"
 |  PHP | 8.X  |
 | ext-curl | * |
 
+### بیشتر
+اگر برای اجرای این پکیج روی local با مشکل SSL مواجه شدید. می توانید در فایل SMSApi.php این موارد را ویرایش کنید و به false تغییر دهید. 
+```
+CURLOPT_SSL_VERIFYHOST => false,
+CURLOPT_SSL_VERIFYPEER => false,
+```
+
