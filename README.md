@@ -27,6 +27,6 @@ php artisan vendor:publish --provider="Alizne\SmsApi\SmsApiServiceProvider"
 
 | پیش نیاز  | حداقل نسخه |
 | ------------- | ------------- |
-|  PHP | 7.X  |
+|  PHP | 8.X  |
 | ext-curl | * |
 
