@@ -103,8 +103,8 @@ class SMSApi
             CURLOPT_HTTPHEADER => ['Content-Type: application/json',
                 "x-sms-ir-secure-token: {$this->Token}"],
             CURLOPT_POST => $method,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => true,
+            CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_HEADER => false,
             CURLOPT_RETURNTRANSFER => true,
         ]);
