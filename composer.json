@@ -1,0 +1,26 @@
+{
+    "name": "alizne/smsapi",
+    "description": "A package to connecting to sms.ir for send sms, get sms and etc function's",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ali Zeinodin",
+            "email": "alizeinodin79@gmail.com"
+        }
+    ],
+    "require": {
+        "ext-curl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Alizne\\SmsApi\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Alizne\\SmsApi\\SmsApiServiceProvider"
+            ]
+        }
+    }
+}
