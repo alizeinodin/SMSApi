@@ -134,13 +134,13 @@ class SMSApi
      * and can send for any mobile number also mobile number's which blocked advertising SMS's
      *
      * @param $code
-     * @param array $phoneNumber
+     * @param $phoneNumber
      * @param string $URL
      *
      * @return bool|string
      * @throws Exception
      */
-    public function SendVerifySMS($code, array $phoneNumber, $URL = "/VerificationCode"): bool|string
+    public function SendVerifySMS($code, $phoneNumber, $URL = "/VerificationCode"): bool|string
     {
         $postData = [
             'Code' => $code,
