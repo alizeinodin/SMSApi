@@ -30,7 +30,7 @@ SMSAPI_API_KEY="Your Api Key"
 SMSAPI_SECRET_KEY="Your Secret Key"
 SMSAPI_LINE_NUMBER="Your Line Number"
 ```
-موارد Api Key ، Secret Key و Line Number در پروفایل کاربری شما در [sms.ir](https://sms.ir) موجود است.
+مقادیر Api Key ، Secret Key و Line Number در پروفایل کاربری شما در [sms.ir](https://sms.ir) موجود است.
 
 
 ### پیش نیاز
