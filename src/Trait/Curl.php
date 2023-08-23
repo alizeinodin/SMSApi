@@ -7,7 +7,7 @@ use Exception;
 
 trait Curl
 {
-    protected bool $sslVerifier;
+    protected bool $sslVerifier = true;
 
     /**
      * @param bool $sslVerifier
@@ -29,10 +29,10 @@ trait Curl
     /**
      * @throws Exception
      */
-    protected function CURL(
+    protected function requestCurl(
         $url,
-        array $headers = [],
         RequestType $method = RequestType::GET,
+        array $headers = [],
         array $data = [],
     ): bool|string
     {
@@ -44,10 +44,11 @@ trait Curl
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_POSTFIELDS => $data,
             CURLOPT_CUSTOMREQUEST => $method->value,
-            CURLOPT_SSL_VERIFYHOST => true,
-            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => $this->sslVerifier,
+            CURLOPT_SSL_VERIFYPEER => $this->sslVerifier,
             CURLOPT_HEADER => false,
-            CURLOPT_RETURNTRANSFER => true,]);
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
 
         $result = curl_exec($ch);
 
