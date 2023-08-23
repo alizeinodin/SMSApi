@@ -10,23 +10,6 @@ trait Curl
     protected bool $sslVerifier = true;
 
     /**
-     * @param bool $sslVerifier
-     * @return void
-     */
-    private function setSslVerifier(bool $sslVerifier): void
-    {
-        $this->sslVerifier = $sslVerifier;
-    }
-
-    /**
-     * @return bool
-     */
-    private function getSslVerifier(): bool
-    {
-        return $this->sslVerifier;
-    }
-
-    /**
      * @throws Exception
      */
     protected function requestCurl(
