@@ -2,16 +2,22 @@
 
 namespace Alizne\SmsApi;
 
+use Alizne\SmsApi\Enum\RequestType;
+use Alizne\SmsApi\Trait\Curl;
 use Exception;
 
 class SMSApi
 {
-    private string $URL_SMS = "https://RestfulSms.com/api";
-    private string $LineNumber;
-    private mixed $Token;
-    private string $APIUrl = "https://RestfulSms.com/api/Token";
-    private string $SecretKey;
-    private string $APIKey;
+    use Curl;
+
+    protected string $URL_SMS = "https://RestfulSms.com/api";
+    protected string $LineNumber;
+    protected mixed $Token;
+    protected string $APIUrl = "https://RestfulSms.com/api/Token";
+    protected string $SecretKey;
+    protected string $APIKey;
+
+    protected array $headers;
 
     /**
      * this constructor initial value's
@@ -30,8 +36,26 @@ class SMSApi
     {
         $this->APIKey = config('SMSApi.api_key');
         $this->SecretKey = config('SMSApi.secret_key');
-        $this->Token = $this->getToken();
         $this->LineNumber = config('SMSApi.line_number');
+        $this->sslVerifier = config('SMSApi.ssl_verifier');
+
+        $this->Token = $this->getToken();
+
+        $this->headers = [
+            "Content-Type: application/json",
+            "x-sms-ir-secure-token: {$this->Token}"
+        ];
+    }
+
+    /**
+     * return full url for a request
+     *
+     * @param string $url
+     * @return string
+     */
+    private function fullURL(string $url = '', string $queryString = ''): string
+    {
+        return $this->URL_SMS . $url . $queryString;
     }
 
     /**
@@ -49,27 +73,16 @@ class SMSApi
             "SecretKey" => $this->SecretKey,
         ];
 
-        $postString = json_encode($postData);
-        $ch = curl_init();
+        $result = $this->requestCurl(
+            $this->APIUrl,
+            RequestType::POST,
+            [
+                "Content-Type: application/json",
+            ],
+            $postData);
 
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $this->APIUrl,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_HEADER => false,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $postString,
-
-        ]);
-
-        $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-            print_r(curl_error($ch));
-        }
-        curl_close($ch);
         $result = json_decode($result);
+
         if (is_object($result)) {
             if ($result->IsSuccessful) {
                 $this->Token = $result->TokenKey;
@@ -77,55 +90,6 @@ class SMSApi
             } else throw new Exception($result->Message);
         }
         throw new Exception("Api wasn't make!");
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function CURL(
-        $url,
-        $postData = NULL /* Default Value for get requests */,
-        $customRequest = NULL): bool|string
-    {
-        /*
-         * custom request is other request like put, push
-         * if it was set, will use and if it was null.
-         * method true is post and false is get
-         */
-        $customRequest ?: ($postData ? $method = true : $method = false);
-
-        $postData = json_encode($postData);
-
-        $ch = curl_init();
-
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json',
-                "x-sms-ir-secure-token: {$this->Token}"],
-            CURLOPT_POST => $method,
-            CURLOPT_SSL_VERIFYHOST => true,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HEADER => false,
-            CURLOPT_RETURNTRANSFER => true,
-        ]);
-
-        /*
-         * type of request. put , push, post, get, if it set custom, will use
-         * and if was not set, it is post or get
-         */
-        $customRequest ?
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $customRequest) :
-            curl_setopt($ch, CURLOPT_POST, $method);
-
-        // set opt is for post method. so if it is set, postField will set
-        !$method ?: curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-
-        $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-            throw new Exception(curl_error($ch));
-        }
-        curl_close($ch);
-        return $result;
     }
 
     /**
@@ -140,13 +104,19 @@ class SMSApi
      * @return bool|string
      * @throws Exception
      */
-    public function SendVerifySMS($code, $phoneNumber, $URL = "/VerificationCode"): bool|string
+    public function SendVerifySMS($code, $phoneNumber, string $URL = "/VerificationCode"): bool|string
     {
         $postData = [
             'Code' => $code,
             'MobileNumber' => $phoneNumber,
         ];
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
     }
 
 
@@ -161,7 +131,7 @@ class SMSApi
      * @return bool|string
      * @throws Exception
      */
-    public function SendingSMS(array $phoneNumbers, $text, $SendDateTime = NULL, $URL = "/MessageSend"): bool|string
+    public function SendingSMS(array $phoneNumbers, $text, $SendDateTime = NULL, string $URL = "/MessageSend"): bool|string
     {
         $postData = [
             "Messages" => array($text),
@@ -170,7 +140,12 @@ class SMSApi
             "SendDateTime" => $SendDateTime ? $SendDateTime : now()->toDateString(),
             "CanContinueInCaseOfError" => false
         ];
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData);
     }
 
     /**
@@ -183,7 +158,10 @@ class SMSApi
      */
     public function getBalanceCharge(string $URL = '/credit'): bool|string
     {
-        return $this->CURL($this->URL_SMS . $URL);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::GET,
+            $this->headers);
     }
 
     /**
@@ -197,7 +175,11 @@ class SMSApi
      */
     public function getSMSLines(string $URL = '/SMSLine'): bool|string
     {
-        return $this->CURL($this->URL_SMS . $URL);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -206,7 +188,7 @@ class SMSApi
      *
      * @param $lineNumber
      */
-    public function changeLineNumber($lineNumber)
+    public function changeLineNumber($lineNumber): void
     {
         $this->LineNumber = $lineNumber;
     }
@@ -220,8 +202,13 @@ class SMSApi
      */
     public function incomingMessageListWithId($id, string $URL = '/ReceiveMessage'): bool|string
     {
-        $getURL = $this->URL_SMS . $URL . "?id={$id}";
-        return $this->CURL($getURL);
+        $getURL = $this->fullURL($URL, "?id={$id}");
+
+        return $this->requestCurl(
+            $getURL,
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -236,13 +223,17 @@ class SMSApi
      */
     public function incomingMessageListWithDate($dateFrom, $dateTo, $rowsPerPage, $page, $URL = '/ReceiveMessage'): bool|string
     {
-        $getURL = $this->URL_SMS . $URL . "
+        $getURL = $this->fullURL($URL, "
                 ?Shamsi_FromDate={$dateFrom}
                 &Shamsi_ToDate={$dateTo}
                 &RowsPerPage={$rowsPerPage}
-                &RequestedPageNumber={$page}";
+                &RequestedPageNumber={$page}");
 
-        return $this->CURL($getURL);
+        return $this->requestCurl(
+            $getURL,
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -254,8 +245,13 @@ class SMSApi
      */
     public function incomingMessageWithId($id, string $URL = "/ReceiveMessageWithId"): bool|string
     {
-        $getURL = $this->URL_SMS . $URL . "?id={$id}";
-        return $this->CURL($getURL);
+        $getURL = $this->fullURL($URL, "?id={$id}");
+
+        return $this->requestCurl(
+            $getURL,
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -275,7 +271,12 @@ class SMSApi
             'BirthDay' => $dataOfUser['BirthDay'],
             'CategoryId' => $dataOfUser['CategoryID']
         ];
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
     }
 
     /**
@@ -296,7 +297,13 @@ class SMSApi
             'BirthDay' => $dataOfUser['BirthDay'],
             'CategoryId' => $dataOfUser['CategoryID']
         ];
-        return $this->CURL($this->URL_SMS . $URL, $postData, "PUT");
+//        return $this->CURL($this->URL_SMS . $URL, $postData, "PUT");
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::PUT,
+            $this->headers,
+            $postData
+        );
     }
 
     /**
@@ -307,7 +314,11 @@ class SMSApi
      */
     public function getCustomerClubContactCategories(string $URL = '/CustomerClubContact/GetCategories'): bool|string
     {
-        return $this->CURL($URL);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -320,9 +331,13 @@ class SMSApi
     public function getCustomerClubContactList($page, string $URL = '/CustomerClubContact/GetContacts'): bool|string
     {
         // pagination of this function: 10 records in per page
+        $getURL = $this->fullURL($URL, "?pageNumber={$page}");
 
-        $getURL = $this->URL_SMS . $URL . "?pageNumber={$page}";
-        return $this->CURL($getURL);
+        return $this->requestCurl(
+            $getURL,
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -339,7 +354,12 @@ class SMSApi
             "CanContinueInCaseOfError" => false
         ];
 
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData,
+        );
     }
 
     /**
@@ -363,7 +383,12 @@ class SMSApi
             'SendDateTime' => $date,
             'CanContinueInCaseOfError' => $CanContinueInCaseOfError,
         ];
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
     }
 
     /**
@@ -386,8 +411,12 @@ class SMSApi
             'MessageText' => $message
         ];
 
-        return $this->CURL($this->URL_SMS . $URL, $postData);
-
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
     }
 
     /**
@@ -412,7 +441,12 @@ class SMSApi
             "CanContinueInCaseOfError" => $CanContinueInCaseOfError,
         ];
 
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
     }
 
     /**
@@ -430,8 +464,13 @@ class SMSApi
         // pageIndex    => number of index of page
         // rowCount     => number of record in per page
 
-        $getURL = $this->URL_SMS . $URL . "?pageIndex={$pageIndex}&rowCount={$rowCount}";
-        return $this->CURL($getURL);
+        $getURL = $this->fullURL($URL, "?pageIndex={$pageIndex}&rowCount={$rowCount}");
+
+        return $this->requestCurl(
+            $getURL,
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -449,8 +488,13 @@ class SMSApi
          * if you want other record's you should use next last id
          */
 
-        $getURL = $this->URL_SMS . $URL . "?lastId={$lastID}";
-        return $this->CURL($getURL);
+        $getURL = $this->fullURL($URL, "?lastId={$lastID}");
+
+        return $this->requestCurl(
+            $getURL,
+            RequestType::GET,
+            $this->headers
+        );
     }
 
     /**
@@ -480,7 +524,12 @@ class SMSApi
             "TemplateId" => $templateId,
         ];
 
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
 
     }
 
@@ -504,7 +553,12 @@ class SMSApi
             "ToDate" => $toDate,
         ];
 
-        return $this->CURL($this->URL_SMS . $URL, $postData);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
     }
 
     /**
@@ -516,8 +570,13 @@ class SMSApi
      */
     public function getReportOfUltraFastSendMessage($verificationCodeId, string $URL = '/UltraFastSend/'): bool|string
     {
-        $getURL = $this->URL_SMS . $URL . "/{$verificationCodeId}";
-        return $this->CURL($getURL);
+        $getURL = $this->fullURL($URL, "/{$verificationCodeId}");
+
+        return $this->requestCurl(
+            $getURL,
+            RequestType::GET,
+            $this->headers,
+        );
     }
 
     /**
@@ -533,7 +592,12 @@ class SMSApi
 
         $postData = $templateText;
 
-        return $this->CURL($postData);
+        return $this->requestCurl(
+            $this->fullURL($URL),
+            RequestType::POST,
+            $this->headers,
+            $postData
+        );
     }
 
     /**
@@ -545,7 +609,13 @@ class SMSApi
      */
     public function statusOfTemplateOfUltraSendMessage($templateId, string $URL = '/FastSendTemplate'): bool|string
     {
-        $postURL = $this->URL_SMS . $URL . "/{$templateId}";
-        return $this->CURL($postURL, NULL, "POST");
+        $postURL = $this->fullURL($URL, "/{$templateId}");
+
+        return $this->requestCurl(
+            $postURL,
+            RequestType::POST,
+            $this->headers,
+            [],
+        );
     }
 }
