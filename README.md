@@ -253,6 +253,7 @@ SMSAPI_LOGGING_ENABLED=false
 - [Notifications](https://github.com/alizeinodin/SMSApi/wiki/notifications)
 - [HTTP API & webhooks](https://github.com/alizeinodin/SMSApi/wiki/http-api)
 - [Drivers](https://github.com/alizeinodin/SMSApi/wiki/drivers)
+- [Adding a provider](https://github.com/alizeinodin/SMSApi/wiki/adding-a-provider)
 - [Testing](https://github.com/alizeinodin/SMSApi/wiki/testing)
 - [Security](https://github.com/alizeinodin/SMSApi/wiki/security)
 
