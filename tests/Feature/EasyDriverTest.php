@@ -14,7 +14,8 @@ class EasyDriverTest extends TestCase
     public function test_custom_driver_only_needs_sender_methods(): void
     {
         Sms::extend('mini', function ($app, $name) {
-            return new class(['name' => is_string($name) ? $name : 'mini']) extends AbstractDriver {
+            return new class(['name' => is_string($name) ? $name : 'mini']) extends AbstractDriver
+            {
                 public function getName(): string
                 {
                     return (string) ($this->config['name'] ?? 'mini');
@@ -54,7 +55,8 @@ class EasyDriverTest extends TestCase
     public function test_named_connection_keeps_provider_separate_from_name(): void
     {
         Sms::extend('mini', function ($app, $name) {
-            return new class(['name' => is_string($name) ? $name : 'mini', 'driver' => 'mini']) extends AbstractDriver {
+            return new class(['name' => is_string($name) ? $name : 'mini', 'driver' => 'mini']) extends AbstractDriver
+            {
                 public function getName(): string
                 {
                     return (string) ($this->config['name'] ?? 'mini');

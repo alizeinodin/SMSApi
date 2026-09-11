@@ -49,7 +49,7 @@ class SensitiveDataTest extends TestCase
         $this->app['config']->set('smsapi.logging.enabled', true);
         $this->app['config']->set('smsapi.otp.redact.enabled', true);
 
-        (new SmsLogger())->log(
+        (new SmsLogger)->log(
             'sendTemplate',
             new SendResult(true, 'ok', ['messageId' => '1'], 'array'),
             '09121234567',

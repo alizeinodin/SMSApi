@@ -15,8 +15,7 @@ class LowBalanceNotification extends Notification
         public float $balance,
         public float $threshold,
         public string $driver,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, string>

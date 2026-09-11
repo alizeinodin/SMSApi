@@ -15,8 +15,7 @@ class CacheOtpStore implements OtpStore
     public function __construct(
         private CacheRepository $cache,
         private string $prefix = 'smsapi:otp',
-    ) {
-    }
+    ) {}
 
     public function create(
         string $recipient,
@@ -127,12 +126,13 @@ class CacheOtpStore implements OtpStore
 
     /**
      * @template T
+     *
      * @param  callable(): T  $callback
      * @return T
      */
     private function lock(string $recipient, string $purpose, callable $callback): mixed
     {
-        $lock = $this->cache->lock($this->prefix . ':lock:' . hash('sha256', $purpose . '|' . $recipient), 5);
+        $lock = $this->cache->lock($this->prefix.':lock:'.hash('sha256', $purpose.'|'.$recipient), 5);
 
         try {
             return $lock->block(5, $callback);
@@ -161,7 +161,7 @@ class CacheOtpStore implements OtpStore
      */
     private function hydrate(array $payload): object
     {
-        $challenge = new stdClass();
+        $challenge = new stdClass;
         $challenge->id = $payload['id'];
         $challenge->recipient = (string) $payload['recipient'];
         $challenge->purpose = (string) $payload['purpose'];
@@ -206,6 +206,6 @@ class CacheOtpStore implements OtpStore
 
     private function key(string $recipient, string $purpose): string
     {
-        return $this->prefix . ':' . hash('sha256', $purpose . '|' . $recipient);
+        return $this->prefix.':'.hash('sha256', $purpose.'|'.$recipient);
     }
 }

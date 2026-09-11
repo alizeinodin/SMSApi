@@ -10,6 +10,5 @@ class SmsQueuedSendFailed
     public function __construct(
         public SendMessageJob $job,
         public Throwable $exception,
-    ) {
-    }
+    ) {}
 }

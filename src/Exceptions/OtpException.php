@@ -2,6 +2,4 @@
 
 namespace Alizeinodin\SmsApi\Exceptions;
 
-class OtpException extends SmsApiException
-{
-}
+class OtpException extends SmsApiException {}

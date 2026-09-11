@@ -19,8 +19,7 @@ class TemplateMail extends Mailable
         public string $templateName,
         public array $parameters = [],
         public array $mail = [],
-    ) {
-    }
+    ) {}
 
     public function build(): self
     {

@@ -1,11 +1,12 @@
 <?php
 
 use Alizeinodin\SmsApi\Http\Controllers\SendMessageController;
+use Alizeinodin\SmsApi\Http\Middleware\VerifyApiToken;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(array_merge(
     (array) config('smsapi.api.middleware', ['api']),
-    [\Alizeinodin\SmsApi\Http\Middleware\VerifyApiToken::class],
+    [VerifyApiToken::class],
 ))
     ->prefix(trim((string) config('smsapi.api.prefix', 'smsapi'), '/'))
     ->group(function (): void {

@@ -5,8 +5,8 @@ namespace Alizeinodin\SmsApi\Otp;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\OtpException;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
-use Alizeinodin\SmsApi\SmsManager;
 use Alizeinodin\SmsApi\Pending\TemplateSend;
+use Alizeinodin\SmsApi\SmsManager;
 use DateInterval;
 use DateTimeInterface;
 use Illuminate\Foundation\Bus\PendingDispatch;
@@ -61,8 +61,7 @@ class OtpIssue
         private SmsManager $manager,
         private OtpVault $vault,
         private string $purpose,
-    ) {
-    }
+    ) {}
 
     public function template(string $name): self
     {

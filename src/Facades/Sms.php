@@ -55,8 +55,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static SmsDriver setLineNumber(int|string $lineNumber)
  * @method static int|null getLineNumber()
  *
- * @see \Alizeinodin\SmsApi\SmsManager
- * @see \Alizeinodin\SmsApi\Pending\QueuedSend
+ * @see SmsManager
+ * @see QueuedSend
  */
 class Sms extends Facade
 {

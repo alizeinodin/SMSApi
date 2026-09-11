@@ -19,8 +19,7 @@ class PersistingLogDriver implements SmsDriver
     public function __construct(
         private MessageDriver $driver,
         private SmsLogger $logger,
-    ) {
-    }
+    ) {}
 
     protected function delegate(): MessageDriver
     {

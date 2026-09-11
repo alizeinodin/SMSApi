@@ -2,12 +2,12 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
-use Alizeinodin\SmsApi\DTOs\SendResult;
-use Alizeinodin\SmsApi\Exceptions\SmsApiException;
-use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use Alizeinodin\SmsApi\Drivers\Concerns\FlattensTemplateParameters;
 use Alizeinodin\SmsApi\Drivers\Concerns\HasProviderIdentity;
 use Alizeinodin\SmsApi\Drivers\Concerns\ResolvesSenderLine;
+use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
+use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use GuzzleHttp\Client;
 
 /**
@@ -121,7 +121,7 @@ abstract class SmsWebserviceV3Driver extends AbstractDriver
     protected static function makeV3Client(array $config): Client
     {
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.sms-webservice.com/api/V3'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.sms-webservice.com/api/V3'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
             'headers' => [
@@ -166,7 +166,6 @@ abstract class SmsWebserviceV3Driver extends AbstractDriver
 
     /**
      * @param  array<string, mixed>  $raw
-     * @param  mixed  $data
      */
     protected function toV3Response(array $raw, mixed $data = null): SendResult
     {

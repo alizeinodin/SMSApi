@@ -91,13 +91,13 @@ class IppanelDriver extends AbstractDriver
     private static function makeClient(array $config): Client
     {
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api2.ippanel.com/api/v1'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api2.ippanel.com/api/v1'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
             'headers' => [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'AccessKey ' . (string) ($config['api_key'] ?? ''),
+                'Authorization' => 'AccessKey '.(string) ($config['api_key'] ?? ''),
             ],
         ]);
     }

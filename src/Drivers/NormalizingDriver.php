@@ -21,8 +21,7 @@ class NormalizingDriver implements SmsDriver
     public function __construct(
         private MessageDriver $driver,
         private array $config = [],
-    ) {
-    }
+    ) {}
 
     protected function delegate(): MessageDriver
     {

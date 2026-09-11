@@ -16,7 +16,7 @@ class FailoverDriverTest extends TestCase
             ['broken', 'ok'],
             fn (string $name) => match ($name) {
                 'broken' => new FailingDriver(['name' => 'broken']),
-                'ok' => (new SmsFake())->actingAsDriver('ok'),
+                'ok' => (new SmsFake)->actingAsDriver('ok'),
             },
         );
 
@@ -30,7 +30,7 @@ class FailoverDriverTest extends TestCase
     {
         $driver = new FailoverDriver(
             ['primary', 'secondary'],
-            fn (string $name) => (new SmsFake())->actingAsDriver($name),
+            fn (string $name) => (new SmsFake)->actingAsDriver($name),
         );
 
         $response = $driver->getCredit();

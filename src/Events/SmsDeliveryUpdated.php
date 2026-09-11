@@ -10,6 +10,5 @@ class SmsDeliveryUpdated
     public function __construct(
         public SmsLog $log,
         public DeliveryUpdate $update,
-    ) {
-    }
+    ) {}
 }

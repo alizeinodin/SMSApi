@@ -27,8 +27,7 @@ class ResilienceDriver implements SmsDriver
         private MessageDriver $driver,
         private CircuitBreaker $circuitBreaker,
         private SmsRateLimiter $rateLimiter,
-    ) {
-    }
+    ) {}
 
     protected function delegate(): MessageDriver
     {

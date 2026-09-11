@@ -2,12 +2,12 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
-use Alizeinodin\SmsApi\DTOs\SendResult;
-use Alizeinodin\SmsApi\Exceptions\SmsApiException;
-use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use Alizeinodin\SmsApi\Drivers\Concerns\FlattensTemplateParameters;
 use Alizeinodin\SmsApi\Drivers\Concerns\HasProviderIdentity;
 use Alizeinodin\SmsApi\Drivers\Concerns\ResolvesSenderLine;
+use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
+use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use GuzzleHttp\Client;
 
 /**
@@ -80,7 +80,7 @@ class MedianaDriver extends AbstractDriver
     private static function makeClient(array $config): Client
     {
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.mediana.ir'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.mediana.ir'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
             'headers' => [

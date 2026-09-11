@@ -22,7 +22,7 @@ class CheckBalanceCommand extends Command
         try {
             $result = $monitor->check();
         } catch (Throwable $e) {
-            $this->error('Balance check failed: ' . $e->getMessage());
+            $this->error('Balance check failed: '.$e->getMessage());
 
             return self::FAILURE;
         }

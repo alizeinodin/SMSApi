@@ -210,7 +210,7 @@ class ArrayDriver implements SmsDriver
             success: true,
             message: 'Recorded by array/fake driver.',
             data: $data ?? [
-                'messageId' => 'fake-' . (count($this->allMessages())),
+                'messageId' => 'fake-'.(count($this->allMessages())),
                 'operation' => $operation,
             ],
             driver: $this->getName(),

@@ -9,6 +9,8 @@ use Alizeinodin\SmsApi\Exceptions\OtpExpiredException;
 use Alizeinodin\SmsApi\Exceptions\RateLimitExceededException;
 use Alizeinodin\SmsApi\Facades\Sms;
 use Alizeinodin\SmsApi\Otp\OtpChallenge;
+use Alizeinodin\SmsApi\Otp\OtpStore;
+use Alizeinodin\SmsApi\Otp\OtpVault;
 use Alizeinodin\SmsApi\Tests\TestCase;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +22,7 @@ class OtpVaultTest extends TestCase
         parent::setUp();
 
         $this->createOtpTable();
-        $this->app['config']->set('app.key', 'base64:' . base64_encode(str_repeat('a', 32)));
+        $this->app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
         $this->app['config']->set('smsapi.otp.vault', [
             'enabled' => true,
             'store' => 'database',
@@ -192,8 +194,8 @@ class OtpVaultTest extends TestCase
     public function test_cache_store_roundtrip(): void
     {
         $this->app['config']->set('smsapi.otp.vault.store', 'cache');
-        $this->app->forgetInstance(\Alizeinodin\SmsApi\Otp\OtpStore::class);
-        $this->app->forgetInstance(\Alizeinodin\SmsApi\Otp\OtpVault::class);
+        $this->app->forgetInstance(OtpStore::class);
+        $this->app->forgetInstance(OtpVault::class);
 
         Sms::fake();
 

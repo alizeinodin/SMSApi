@@ -2,13 +2,14 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
-use Alizeinodin\SmsApi\DTOs\SendResult;
-use Alizeinodin\SmsApi\Exceptions\SmsApiException;
-use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use Alizeinodin\SmsApi\Drivers\Concerns\FlattensTemplateParameters;
 use Alizeinodin\SmsApi\Drivers\Concerns\HasProviderIdentity;
 use Alizeinodin\SmsApi\Drivers\Concerns\ResolvesSenderLine;
+use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
+use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Shared Payamak Panel REST API (ملی‌پیامک، فراپیامک، پیامیتو، …).
@@ -76,7 +77,7 @@ abstract class PayamakPanelDriver extends AbstractDriver
     protected static function makePayamakClient(array $config): Client
     {
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://rest.payamak-panel.com/api'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://rest.payamak-panel.com/api'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
             'headers' => ['Accept' => 'application/json'],
@@ -107,7 +108,7 @@ abstract class PayamakPanelDriver extends AbstractDriver
 
         try {
             $response = $this->client->request($method, ltrim($uri, '/'), ['form_params' => $form]);
-        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        } catch (GuzzleException $e) {
             throw new SmsApiException(
                 sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
                 (int) $e->getCode(),

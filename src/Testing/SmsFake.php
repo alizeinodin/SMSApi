@@ -69,7 +69,7 @@ class SmsFake extends ArrayDriver
         PHPUnit::assertCount(
             $times,
             $matches,
-            "Expected SMS to be sent {$times} time(s), but was sent " . count($matches) . ' time(s).',
+            "Expected SMS to be sent {$times} time(s), but was sent ".count($matches).' time(s).',
         );
     }
 

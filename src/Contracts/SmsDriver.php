@@ -15,6 +15,4 @@ namespace Alizeinodin\SmsApi\Contracts;
  *   SmsReports      — delivery reports
  *   SmsInbox        — inbound
  */
-interface SmsDriver extends SmsSender, SmsWallet, SmsReports, SmsInbox, SmsScheduler, SmsLineAware
-{
-}
+interface SmsDriver extends SmsInbox, SmsLineAware, SmsReports, SmsScheduler, SmsSender, SmsWallet {}

@@ -22,8 +22,7 @@ class ObservingDriver implements SmsDriver
     public function __construct(
         private MessageDriver $driver,
         private Dispatcher $events,
-    ) {
-    }
+    ) {}
 
     protected function delegate(): MessageDriver
     {

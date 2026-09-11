@@ -68,7 +68,7 @@ class GhasedakDriver extends AbstractDriver
 
         $index = 1;
         foreach ($this->flattenParameters($parameters) as $value) {
-            $payload['param' . $index] = $value;
+            $payload['param'.$index] = $value;
             $index++;
         }
 
@@ -91,7 +91,7 @@ class GhasedakDriver extends AbstractDriver
     private static function makeClient(array $config): Client
     {
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.ghasedak.me/v2'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.ghasedak.me/v2'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
             'headers' => [

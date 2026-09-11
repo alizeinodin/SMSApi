@@ -10,6 +10,8 @@ use Alizeinodin\SmsApi\Contracts\MessageDriver;
 use Alizeinodin\SmsApi\Contracts\SmsDriver;
 use Alizeinodin\SmsApi\Delivery\DeliveryStatusUpdater;
 use Alizeinodin\SmsApi\Delivery\Parsers\GenericDeliveryWebhookParser;
+use Alizeinodin\SmsApi\Http\Middleware\VerifyApiToken;
+use Alizeinodin\SmsApi\Http\Middleware\VerifyWebhookToken;
 use Alizeinodin\SmsApi\Logging\SmsLogger;
 use Alizeinodin\SmsApi\Mail\TemplateMailer;
 use Alizeinodin\SmsApi\Notifications\SmsChannel;
@@ -17,8 +19,6 @@ use Alizeinodin\SmsApi\Otp\CacheOtpStore;
 use Alizeinodin\SmsApi\Otp\DatabaseOtpStore;
 use Alizeinodin\SmsApi\Otp\OtpStore;
 use Alizeinodin\SmsApi\Otp\OtpVault;
-use Alizeinodin\SmsApi\Http\Middleware\VerifyApiToken;
-use Alizeinodin\SmsApi\Http\Middleware\VerifyWebhookToken;
 use Alizeinodin\SmsApi\Policies\MessagePolicyRegistry;
 use Alizeinodin\SmsApi\Resilience\CircuitBreaker;
 use Alizeinodin\SmsApi\Resilience\SmsRateLimiter;
@@ -34,19 +34,19 @@ class SmsApiServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'smsapi');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'smsapi');
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/smsapi.php' => config_path('smsapi.php'),
+                __DIR__.'/../config/smsapi.php' => config_path('smsapi.php'),
             ], 'smsapi-config');
 
             $this->publishes([
-                __DIR__ . '/../database/migrations' => database_path('migrations'),
+                __DIR__.'/../database/migrations' => database_path('migrations'),
             ], 'smsapi-migrations');
 
             $this->publishes([
-                __DIR__ . '/../resources/views/mail' => resource_path('views/vendor/smsapi/mail'),
+                __DIR__.'/../resources/views/mail' => resource_path('views/vendor/smsapi/mail'),
             ], 'smsapi-mail');
 
             $this->commands([
@@ -69,7 +69,7 @@ class SmsApiServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/smsapi.php', 'smsapi');
+        $this->mergeConfigFrom(__DIR__.'/../config/smsapi.php', 'smsapi');
 
         $this->app->alias(VerifyWebhookToken::class, 'smsapi.webhook');
         $this->app->alias(VerifyApiToken::class, 'smsapi.api');
@@ -93,7 +93,7 @@ class SmsApiServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TemplateMailer::class, function () {
-            return new TemplateMailer();
+            return new TemplateMailer;
         });
 
         $this->app->singleton(BalanceMonitor::class, function ($app) {
@@ -101,7 +101,7 @@ class SmsApiServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(SmsLogger::class, function () {
-            return new SmsLogger();
+            return new SmsLogger;
         });
 
         $this->app->singleton(TemplateRegistry::class, function () {
@@ -117,11 +117,11 @@ class SmsApiServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(DeliveryStatusUpdater::class, function () {
-            return new DeliveryStatusUpdater();
+            return new DeliveryStatusUpdater;
         });
 
         $this->app->singleton(GenericDeliveryWebhookParser::class, function () {
-            return new GenericDeliveryWebhookParser();
+            return new GenericDeliveryWebhookParser;
         });
 
         $this->app->singleton(CircuitBreaker::class, function ($app) {
@@ -145,7 +145,7 @@ class SmsApiServiceProvider extends ServiceProvider
                 return new CacheOtpStore($app->make('cache')->store());
             }
 
-            return new DatabaseOtpStore();
+            return new DatabaseOtpStore;
         });
 
         $this->app->singleton(OtpVault::class, function ($app) {
@@ -163,7 +163,7 @@ class SmsApiServiceProvider extends ServiceProvider
             return;
         }
 
-        Route::group([], __DIR__ . '/../routes/webhooks.php');
+        Route::group([], __DIR__.'/../routes/webhooks.php');
     }
 
     protected function registerApiRoutes(): void
@@ -172,7 +172,7 @@ class SmsApiServiceProvider extends ServiceProvider
             return;
         }
 
-        Route::group([], __DIR__ . '/../routes/api.php');
+        Route::group([], __DIR__.'/../routes/api.php');
     }
 
     /**

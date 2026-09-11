@@ -20,9 +20,7 @@ class MessagePolicyRegistry
     /**
      * @param  array<string, mixed>  $messages
      */
-    public function __construct(private array $messages = [])
-    {
-    }
+    public function __construct(private array $messages = []) {}
 
     public function has(string $type): bool
     {

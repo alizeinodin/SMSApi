@@ -56,7 +56,7 @@ abstract class AbstractHttpDriver implements MessageDriver
      */
     protected function buildClient(array $headers = []): Client
     {
-        $baseUri = rtrim((string) ($this->config['base_url'] ?? ''), '/') . '/';
+        $baseUri = rtrim((string) ($this->config['base_url'] ?? ''), '/').'/';
 
         return new Client([
             'base_uri' => $baseUri,

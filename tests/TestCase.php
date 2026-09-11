@@ -2,6 +2,7 @@
 
 namespace Alizeinodin\SmsApi\Tests;
 
+use Alizeinodin\SmsApi\Facades\Sms;
 use Alizeinodin\SmsApi\SmsApiServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
@@ -15,7 +16,7 @@ abstract class TestCase extends BaseTestCase
     protected function getPackageAliases($app): array
     {
         return [
-            'Sms' => \Alizeinodin\SmsApi\Facades\Sms::class,
+            'Sms' => Sms::class,
         ];
     }
 

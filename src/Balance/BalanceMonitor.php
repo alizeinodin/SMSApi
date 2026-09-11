@@ -14,9 +14,7 @@ class BalanceMonitor
 {
     public const CACHE_KEY = 'smsapi.balance_alert.notified';
 
-    public function __construct(private SmsManager $manager)
-    {
-    }
+    public function __construct(private SmsManager $manager) {}
 
     /**
      * Check wallet credit and notify admins when below the configured threshold.

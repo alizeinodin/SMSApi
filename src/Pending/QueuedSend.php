@@ -39,8 +39,7 @@ class QueuedSend
         private string $queue,
         private ?string $connection = null,
         private ?string $channel = null,
-    ) {
-    }
+    ) {}
 
     public function onConnection(string $connection): self
     {

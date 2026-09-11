@@ -24,8 +24,7 @@ class OtpVault
         private OtpStore $store,
         private RateLimiter $limiter,
         private array $config = [],
-    ) {
-    }
+    ) {}
 
     public function enabled(): bool
     {
@@ -67,7 +66,7 @@ class OtpVault
 
     public function hash(string $code, string $recipient, string $purpose): string
     {
-        $payload = strtolower($recipient) . '|' . $purpose . '|' . $code;
+        $payload = strtolower($recipient).'|'.$purpose.'|'.$code;
 
         return hash_hmac('sha256', $payload, $this->pepper());
     }
@@ -152,7 +151,7 @@ class OtpVault
             return $this->fail(
                 $throw,
                 OtpCheckResult::invalid('expired', 0, $challenge->id ?? null),
-                new OtpExpiredException(),
+                new OtpExpiredException,
             );
         }
 
@@ -160,7 +159,7 @@ class OtpVault
             return $this->fail(
                 $throw,
                 OtpCheckResult::invalid('attempts_exceeded', 0, $challenge->id ?? null),
-                new OtpAttemptsExceededException(),
+                new OtpAttemptsExceededException,
             );
         }
 
@@ -175,7 +174,7 @@ class OtpVault
                 return $this->fail(
                     $throw,
                     OtpCheckResult::invalid('attempts_exceeded', 0, $challenge->id ?? null),
-                    new OtpAttemptsExceededException(),
+                    new OtpAttemptsExceededException,
                 );
             }
 
@@ -255,8 +254,8 @@ class OtpVault
 
         $perPurpose = ConfigBoolean::get($throttle['per_purpose'] ?? true, true);
         $key = $perPurpose
-            ? 'smsapi:otp:throttle:' . hash('sha256', $purpose . '|' . $recipient)
-            : 'smsapi:otp:throttle:' . hash('sha256', $recipient);
+            ? 'smsapi:otp:throttle:'.hash('sha256', $purpose.'|'.$recipient)
+            : 'smsapi:otp:throttle:'.hash('sha256', $recipient);
 
         if ($this->limiter->tooManyAttempts($key, $max)) {
             throw new RateLimitExceededException(

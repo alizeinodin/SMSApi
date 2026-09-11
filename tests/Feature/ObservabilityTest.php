@@ -6,7 +6,6 @@ use Alizeinodin\SmsApi\Events\SmsFailed;
 use Alizeinodin\SmsApi\Events\SmsSending;
 use Alizeinodin\SmsApi\Events\SmsSent;
 use Alizeinodin\SmsApi\Facades\Sms;
-use Alizeinodin\SmsApi\Tests\Support\FailingDriver;
 use Alizeinodin\SmsApi\Tests\TestCase;
 use Illuminate\Support\Facades\Event;
 

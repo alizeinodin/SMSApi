@@ -47,7 +47,8 @@
     },
     "require-dev": {
         "orchestra/testbench": "^8.0|^9.0|^10.0",
-        "phpunit/phpunit": "^10.0|^11.0"
+        "phpunit/phpunit": "^10.0|^11.0",
+        "laravel/pint": "^1.32"
     },
     "suggest": {
         "phpunit/phpunit": "Required for Sms::fake() assertions in tests"

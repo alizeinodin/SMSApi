@@ -47,6 +47,7 @@ trait ResolvesDriverConfiguration
      * Raw config from connections.* then drivers.* (no normalization).
      *
      * @return array<string, mixed>|null
+     *
      * @throws BindingResolutionException
      */
     protected function findConnectionConfig(string $name): ?array

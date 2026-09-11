@@ -14,8 +14,7 @@ final class RecordedMessage
         public readonly string $operation,
         public readonly string $driver,
         public readonly array $arguments,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, string>

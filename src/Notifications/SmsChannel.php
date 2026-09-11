@@ -11,9 +11,7 @@ use Illuminate\Notifications\Notification;
 
 class SmsChannel
 {
-    public function __construct(private SmsManager $manager)
-    {
-    }
+    public function __construct(private SmsManager $manager) {}
 
     /**
      * Send the given notification.

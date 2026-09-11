@@ -17,8 +17,7 @@ final class OtpIssueResult
         public readonly string $purpose,
         public readonly DateTimeInterface $expiresAt,
         public readonly ?string $code = null,
-    ) {
-    }
+    ) {}
 
     public function successful(): bool
     {

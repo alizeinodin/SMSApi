@@ -16,7 +16,7 @@ class SmsLoggerTest extends TestCase
         // Fresh install without published/merged logging.enabled must not hit the DB.
         $this->app['config']->set('smsapi.logging', []);
 
-        (new SmsLogger())->log(
+        (new SmsLogger)->log(
             'send',
             new SendResult(true, 'ok', null, 'array'),
             '09123456789',
@@ -31,7 +31,7 @@ class SmsLoggerTest extends TestCase
         $this->createSmsLogsTable();
         $this->app['config']->set('smsapi.logging.enabled', false);
 
-        (new SmsLogger())->log(
+        (new SmsLogger)->log(
             'send',
             new SendResult(true, 'ok', null, 'array'),
             '09123456789',
@@ -46,7 +46,7 @@ class SmsLoggerTest extends TestCase
         $this->createSmsLogsTable();
         $this->app['config']->set('smsapi.logging.enabled', true);
 
-        (new SmsLogger())->log(
+        (new SmsLogger)->log(
             'send',
             new SendResult(true, 'ok', ['messageId' => '42'], 'array'),
             '09123456789',

@@ -18,8 +18,7 @@ class TemplateResolvingDriver implements SmsDriver
     public function __construct(
         private MessageDriver $driver,
         private TemplateRegistry $templates,
-    ) {
-    }
+    ) {}
 
     protected function delegate(): MessageDriver
     {

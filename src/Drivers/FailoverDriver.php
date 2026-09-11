@@ -258,7 +258,7 @@ class FailoverDriver implements SmsDriver
                 'All SMS providers failed for [%s]: %s',
                 $method,
                 implode(' → ', array_map(
-                    static fn (array $a) => $a['driver'] . ' (' . $a['message'] . ')',
+                    static fn (array $a) => $a['driver'].' ('.$a['message'].')',
                     $attempts
                 ))
             ),

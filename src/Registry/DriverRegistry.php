@@ -21,10 +21,10 @@ use Alizeinodin\SmsApi\Drivers\MelipayamakDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\BaleDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\DiscordDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\EitaaDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\FacebookMessengerDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\GapDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\IgapDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\LineDriver;
-use Alizeinodin\SmsApi\Drivers\Messengers\FacebookMessengerDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\RubikaDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\SlackDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\TelegramDriver;
@@ -81,7 +81,8 @@ final class DriverRegistry
     ];
 
     /**
-     * @param array<string, mixed> $config
+     * @param  array<string, mixed>  $config
+     *
      * @throws SmsApiException
      */
     public static function make(string $type, array $config): MessageDriver

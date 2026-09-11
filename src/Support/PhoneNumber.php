@@ -32,7 +32,8 @@ final class PhoneNumber
     }
 
     /**
-     * @param array{enabled?: bool, format?: string, country_code?: string, strict?: bool} $config
+     * @param  array{enabled?: bool, format?: string, country_code?: string, strict?: bool}  $config
+     *
      * @throws InvalidPhoneNumberException
      */
     public static function normalize(string $mobile, array $config = []): string
@@ -68,16 +69,17 @@ final class PhoneNumber
         }
 
         return match ($format) {
-            self::FORMAT_E164 => '+' . $country . $national,
-            self::FORMAT_DIGITS => $country . $national,
-            default => '0' . $national,
+            self::FORMAT_E164 => '+'.$country.$national,
+            self::FORMAT_DIGITS => $country.$national,
+            default => '0'.$national,
         };
     }
 
     /**
-     * @param string|array<int, string> $mobiles
-     * @param array{enabled?: bool, format?: string, country_code?: string, strict?: bool} $config
+     * @param  string|array<int, string>  $mobiles
+     * @param  array{enabled?: bool, format?: string, country_code?: string, strict?: bool}  $config
      * @return array<int, string>
+     *
      * @throws InvalidPhoneNumberException
      */
     public static function normalizeMany(string|array $mobiles, array $config = []): array

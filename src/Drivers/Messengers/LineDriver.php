@@ -5,6 +5,7 @@ namespace Alizeinodin\SmsApi\Drivers\Messengers;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * @see https://developers.line.biz/en/docs/messaging-api/
@@ -43,7 +44,7 @@ class LineDriver extends AbstractMessengerDriver
                     ],
                 ],
             ]);
-        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        } catch (GuzzleException $e) {
             throw new SmsApiException('LINE request failed: '.$e->getMessage(), (int) $e->getCode(), previous: $e);
         }
 

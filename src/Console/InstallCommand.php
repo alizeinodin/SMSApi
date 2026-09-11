@@ -95,7 +95,7 @@ class InstallCommand extends Command
                 return [$argument];
             }
 
-            $this->error('Unknown feature [' . $argument . ']. Use: ' . implode(', ', $known) . ', all');
+            $this->error('Unknown feature ['.$argument.']. Use: '.implode(', ', $known).', all');
 
             return [];
         }
@@ -158,7 +158,7 @@ class InstallCommand extends Command
         $this->patchConfigValue("env('SMSAPI_DELIVERY_SYNC_ENABLED', false)", "env('SMSAPI_DELIVERY_SYNC_ENABLED', true)");
 
         $this->line('  ✓ webhook route + delivery sync enabled');
-        $this->line('  → POST /' . config('smsapi.webhook.path', 'smsapi/webhooks/delivery'));
+        $this->line('  → POST /'.config('smsapi.webhook.path', 'smsapi/webhooks/delivery'));
         $this->line('  → php artisan smsapi:sync-delivery');
     }
 
@@ -260,7 +260,7 @@ class InstallCommand extends Command
         $path = base_path('.env');
 
         if (! File::exists($path)) {
-            $this->warn('  .env not found — set these manually: ' . implode(', ', array_keys($values)));
+            $this->warn('  .env not found — set these manually: '.implode(', ', array_keys($values)));
 
             return;
         }
@@ -271,7 +271,7 @@ class InstallCommand extends Command
             if (preg_match("/^{$key}=.*/m", $contents)) {
                 $contents = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $contents) ?? $contents;
             } else {
-                $contents = rtrim($contents) . PHP_EOL . "{$key}={$value}" . PHP_EOL;
+                $contents = rtrim($contents).PHP_EOL."{$key}={$value}".PHP_EOL;
             }
         }
 

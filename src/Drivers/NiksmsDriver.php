@@ -2,12 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+use Alizeinodin\SmsApi\Drivers\Concerns\HasProviderIdentity;
+use Alizeinodin\SmsApi\Drivers\Concerns\ResolvesSenderLine;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
-use Alizeinodin\SmsApi\Drivers\Concerns\HasProviderIdentity;
-use Alizeinodin\SmsApi\Drivers\Concerns\ResolvesSenderLine;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Nik SMS / نیک اس‌ام‌اس REST API v2.
@@ -84,7 +85,7 @@ class NiksmsDriver extends AbstractDriver
     private static function makeClient(array $config): Client
     {
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://niksms.com/api/v2'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://niksms.com/api/v2'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
         ]);
@@ -110,7 +111,7 @@ class NiksmsDriver extends AbstractDriver
 
         try {
             $response = $this->client->request($method, ltrim($uri, '/'), ['form_params' => $form]);
-        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        } catch (GuzzleException $e) {
             throw new SmsApiException(
                 sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
                 (int) $e->getCode(),

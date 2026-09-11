@@ -25,6 +25,5 @@ class SmsFailed
         public ?string $messageType = null,
         public ?string $channel = null,
         public array $options = [],
-    ) {
-    }
+    ) {}
 }

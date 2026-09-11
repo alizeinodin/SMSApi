@@ -183,9 +183,9 @@ class TemplateMailer
         $replacements = [];
 
         foreach ($parameters as $key => $value) {
-            $replacements[':' . $key] = $value;
-            $replacements[':' . strtoupper($key)] = $value;
-            $replacements[':' . strtolower($key)] = $value;
+            $replacements[':'.$key] = $value;
+            $replacements[':'.strtoupper($key)] = $value;
+            $replacements[':'.strtolower($key)] = $value;
         }
 
         if (! isset($replacements[':CODE'])) {

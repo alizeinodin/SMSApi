@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Pending;
 
+use Alizeinodin\SmsApi\Contracts\SmsDriver;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use Alizeinodin\SmsApi\Mail\TemplateMailer;
+use Alizeinodin\SmsApi\Policies\MessagePolicyRegistry;
 use Alizeinodin\SmsApi\SmsManager;
+use Alizeinodin\SmsApi\Support\RecipientResolver;
 use Alizeinodin\SmsApi\Templates\TemplateDefinition;
 use Alizeinodin\SmsApi\Templates\TemplateRegistry;
 use DateInterval;
@@ -412,7 +415,7 @@ class TemplateSend
         return $pending->sendTemplate($mobile, $this->name, $parameters, $this->options);
     }
 
-    private function client(): \Alizeinodin\SmsApi\Contracts\SmsDriver
+    private function client(): SmsDriver
     {
         if ($this->useDefaultFailover) {
             return $this->manager->failover();
@@ -427,17 +430,17 @@ class TemplateSend
 
     private function tryExtractMobile(string|object $recipient): ?string
     {
-        return \Alizeinodin\SmsApi\Support\RecipientResolver::extractMobile($recipient);
+        return RecipientResolver::extractMobile($recipient);
     }
 
     private function tryExtractEmail(string|object $recipient): ?string
     {
-        return \Alizeinodin\SmsApi\Support\RecipientResolver::extractEmail($recipient);
+        return RecipientResolver::extractEmail($recipient);
     }
 
     private function looksLikeEmail(string $value): bool
     {
-        return \Alizeinodin\SmsApi\Support\RecipientResolver::looksLikeEmail($value);
+        return RecipientResolver::looksLikeEmail($value);
     }
 
     /**
@@ -456,8 +459,8 @@ class TemplateSend
             return;
         }
 
-        /** @var \Alizeinodin\SmsApi\Policies\MessagePolicyRegistry $registry */
-        $registry = app(\Alizeinodin\SmsApi\Policies\MessagePolicyRegistry::class);
+        /** @var MessagePolicyRegistry $registry */
+        $registry = app(MessagePolicyRegistry::class);
         $registry->get($type)->assertWithinAllowedWindow();
     }
 }

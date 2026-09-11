@@ -199,9 +199,9 @@ class LogTransport implements SmsDriver
         $payload = array_merge(['operation' => $operation, 'driver' => 'log'], $context);
 
         if ($this->channel !== null) {
-            Log::channel($this->channel)->log($this->level, '[smsapi:log] ' . $operation, $payload);
+            Log::channel($this->channel)->log($this->level, '[smsapi:log] '.$operation, $payload);
         } else {
-            Log::log($this->level, '[smsapi:log] ' . $operation, $payload);
+            Log::log($this->level, '[smsapi:log] '.$operation, $payload);
         }
 
         return new SendResult(

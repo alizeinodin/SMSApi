@@ -86,7 +86,7 @@ class MagfaDriver extends AbstractDriver
         $domain = (string) ($config['domain'] ?? 'magfa');
 
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://sms.magfa.com/api/http/sms/v2'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://sms.magfa.com/api/http/sms/v2'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
             'auth' => [$username.'/'.$domain, $password],

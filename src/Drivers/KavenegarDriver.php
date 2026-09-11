@@ -85,6 +85,7 @@ class KavenegarDriver extends AbstractDriver
             if (is_array($value) && isset($value['name'], $value['value'])) {
                 $query[$this->mapVerifyToken((string) $value['name'], $tokenIndex)] = (string) $value['value'];
                 $tokenIndex++;
+
                 continue;
             }
 
@@ -118,7 +119,7 @@ class KavenegarDriver extends AbstractDriver
         $apiKey = rawurlencode((string) ($config['api_key'] ?? ''));
 
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.kavenegar.com/v1'), '/') . '/' . $apiKey . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.kavenegar.com/v1'), '/').'/'.$apiKey.'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
             'headers' => [
@@ -191,7 +192,7 @@ class KavenegarDriver extends AbstractDriver
             'token', 'code', 'otp' => 'token',
             'token2', 'token_2' => 'token2',
             'token3', 'token_3' => 'token3',
-            default => $index === 0 ? 'token' : 'token' . ($index + 1),
+            default => $index === 0 ? 'token' : 'token'.($index + 1),
         };
     }
 }

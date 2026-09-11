@@ -16,8 +16,7 @@ final class SendResult
         public readonly array $raw = [],
         public readonly ?int $statusCode = null,
         public readonly array $attempts = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<int, array{driver: string, message: string, code: int}>  $attempts

@@ -9,8 +9,7 @@ final class OtpCheckResult
         public readonly string $reason = 'ok',
         public readonly int $attemptsRemaining = 0,
         public readonly ?string $challengeId = null,
-    ) {
-    }
+    ) {}
 
     public function ok(): bool
     {

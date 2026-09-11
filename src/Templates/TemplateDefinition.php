@@ -22,8 +22,7 @@ final class TemplateDefinition
         public readonly ?array $failover = null,
         public readonly array $options = [],
         public readonly ?array $mail = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws TemplateNotFoundException

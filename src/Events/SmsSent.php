@@ -23,6 +23,5 @@ class SmsSent
         public ?string $messageType = null,
         public ?string $channel = null,
         public array $options = [],
-    ) {
-    }
+    ) {}
 }

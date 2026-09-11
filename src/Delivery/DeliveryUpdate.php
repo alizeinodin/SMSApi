@@ -17,6 +17,5 @@ final class DeliveryUpdate
         public readonly ?string $driver = null,
         public readonly ?CarbonInterface $deliveredAt = null,
         public readonly array $raw = [],
-    ) {
-    }
+    ) {}
 }

@@ -7,6 +7,4 @@ namespace Alizeinodin\SmsApi\Contracts;
  *
  * Only the outbound MessageDriver surface is required — no wallet, inbox, templates, or line APIs.
  */
-interface MessengerDriver extends MessageDriver
-{
-}
+interface MessengerDriver extends MessageDriver {}

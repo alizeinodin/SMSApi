@@ -10,8 +10,7 @@ class SmsRateLimiter
     public function __construct(
         private RateLimiter $limiter,
         private array $config = [],
-    ) {
-    }
+    ) {}
 
     public function enabled(): bool
     {

@@ -81,8 +81,8 @@ final class SensitiveData
         $keys = $keys !== [] ? $keys : self::defaultKeys();
 
         foreach ($keys as $key) {
-            $pattern = '/\b' . preg_quote($key, '/') . '\b\s*[:=]\s*\S+/iu';
-            $content = preg_replace($pattern, $key . '=' . $replacement, $content) ?? $content;
+            $pattern = '/\b'.preg_quote($key, '/').'\b\s*[:=]\s*\S+/iu';
+            $content = preg_replace($pattern, $key.'='.$replacement, $content) ?? $content;
         }
 
         // Best-effort: short messages that are mostly an OTP digit run.

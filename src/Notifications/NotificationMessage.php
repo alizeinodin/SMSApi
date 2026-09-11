@@ -57,7 +57,7 @@ final class NotificationMessage
 
     public static function create(?string $content = null): self
     {
-        $message = new self();
+        $message = new self;
 
         if ($content !== null) {
             $message->content($content);

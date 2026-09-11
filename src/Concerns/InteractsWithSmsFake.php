@@ -2,12 +2,12 @@
 
 namespace Alizeinodin\SmsApi\Concerns;
 
+use Alizeinodin\SmsApi\Contracts\MessageDriver;
 use Alizeinodin\SmsApi\Drivers\ArrayDriver;
 use Alizeinodin\SmsApi\Drivers\NormalizingDriver;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use Alizeinodin\SmsApi\Testing\RecordedMessage;
 use Alizeinodin\SmsApi\Testing\SmsFake;
-use Alizeinodin\SmsApi\Contracts\MessageDriver;
 
 /**
  * In-memory fake + assertion surface for SmsManager / Facade.
@@ -21,7 +21,7 @@ trait InteractsWithSmsFake
      */
     public function fake(): SmsFake
     {
-        $this->fake = new SmsFake();
+        $this->fake = new SmsFake;
         $this->clearDriverCache();
 
         return $this->fake;
@@ -60,7 +60,8 @@ trait InteractsWithSmsFake
     }
 
     /**
-     * @param callable(RecordedMessage): bool|null $callback
+     * @param  callable(RecordedMessage): bool|null  $callback
+     *
      * @throws SmsApiException
      */
     public function assertSent(?callable $callback = null, ?int $times = null): void
@@ -69,7 +70,8 @@ trait InteractsWithSmsFake
     }
 
     /**
-     * @param callable(RecordedMessage): bool|null $callback
+     * @param  callable(RecordedMessage): bool|null  $callback
+     *
      * @throws SmsApiException
      */
     public function assertNotSent(?callable $callback = null): void
@@ -91,7 +93,8 @@ trait InteractsWithSmsFake
     }
 
     /**
-     * @param callable(RecordedMessage): bool|null $callback
+     * @param  callable(RecordedMessage): bool|null  $callback
+     *
      * @throws SmsApiException
      */
     public function assertSentTo(string $mobile, ?callable $callback = null): void
@@ -100,7 +103,8 @@ trait InteractsWithSmsFake
     }
 
     /**
-     * @param callable(RecordedMessage): bool|null $callback
+     * @param  callable(RecordedMessage): bool|null  $callback
+     *
      * @throws SmsApiException
      */
     public function assertTemplateSent(

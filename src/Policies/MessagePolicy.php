@@ -26,8 +26,7 @@ final class MessagePolicy
         public readonly ?array $allowedHours = null,
         public readonly ?array $quietHours = null,
         public readonly ?string $timezone = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Rate-limit / retry channel name (defaults to the message type).
@@ -87,7 +86,7 @@ final class MessagePolicy
     }
 
     /**
-     * @return array{start: int, end: int}|null  Minutes from midnight
+     * @return array{start: int, end: int}|null Minutes from midnight
      */
     public function resolvedAllowedRange(): ?array
     {

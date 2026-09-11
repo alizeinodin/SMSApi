@@ -94,7 +94,7 @@ class AvanakDriver extends AbstractDriver
     private static function makeClient(array $config): Client
     {
         return new Client([
-            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://portal.avanak.ir/rest'), '/') . '/',
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://portal.avanak.ir/rest'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
             'http_errors' => false,
         ]);

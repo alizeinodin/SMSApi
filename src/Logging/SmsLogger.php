@@ -30,7 +30,7 @@ class SmsLogger
         }
 
         $mobile = is_array($mobiles)
-            ? implode(',', array_slice($mobiles, 0, 5)) . (count($mobiles) > 5 ? '…' : '')
+            ? implode(',', array_slice($mobiles, 0, 5)).(count($mobiles) > 5 ? '…' : '')
             : $mobiles;
 
         $content = $this->redactContent($content);

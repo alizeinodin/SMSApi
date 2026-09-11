@@ -9,8 +9,7 @@ class CircuitBreaker
     public function __construct(
         private CacheRepository $cache,
         private array $config = [],
-    ) {
-    }
+    ) {}
 
     public function enabled(): bool
     {

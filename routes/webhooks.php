@@ -9,7 +9,7 @@ Route::middleware(array_merge(
     [VerifyWebhookToken::class],
 ))
     ->post(
-        config('smsapi.webhook.path', 'smsapi/webhooks/delivery') . '/{driver?}',
+        config('smsapi.webhook.path', 'smsapi/webhooks/delivery').'/{driver?}',
         DeliveryWebhookController::class
     )
     ->name('smsapi.webhooks.delivery');
