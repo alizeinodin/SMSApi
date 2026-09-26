@@ -35,7 +35,10 @@
         "laravel": {
             "providers": [
                 "Alizeinodin\\SmsApi\\SmsApiServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "Sms": "Alizeinodin\\SmsApi\\Facades\\Sms"
+            }
         }
     },
     "scripts": {

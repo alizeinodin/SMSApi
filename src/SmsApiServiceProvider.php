@@ -2,7 +2,6 @@
 
 namespace Alizeinodin\SmsApi;
 
-use Alizeinodin\SmsApi\Registry\DriverRegistry;
 use Illuminate\Support\ServiceProvider;
 
 class SmsApiServiceProvider extends ServiceProvider
@@ -18,11 +17,18 @@ class SmsApiServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/smsapi.php', 'smsapi');
 
-        $this->app->singleton('smsapi.driver', function ($app) {
-            $default = (string) $app['config']->get('smsapi.default', 'smsir');
-            $config = (array) $app['config']->get("smsapi.drivers.{$default}", []);
-
-            return DriverRegistry::make($default, $config);
+        $this->app->singleton(SmsManager::class, function ($app) {
+            return new SmsManager($app);
         });
+
+        $this->app->alias(SmsManager::class, 'smsapi');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function provides(): array
+    {
+        return [SmsManager::class, 'smsapi'];
     }
 }

@@ -4,6 +4,23 @@ Laravel package for Iranian SMS panels (sms.ir, Kavenegar, Ghasedak, Farazsms, I
 
 ```bash
 composer require alizeinodin/smsapi
+php artisan vendor:publish --tag=smsapi-config
+```
+
+`.env`:
+
+```env
+SMSAPI_DRIVER=smsir
+SMSAPI_API_KEY=your-api-key
+SMSAPI_LINE_NUMBER=30007
+```
+
+```php
+use Alizeinodin\SmsApi\Facades\Sms;
+
+Sms::send('09121234567', 'سلام');
+Sms::driver('kavenegar')->send('09121234567', 'سلام');
+Sms::sendTemplate('09121234567', 123456, ['Code' => '12345']);
 ```
 
 ## Sandbox / live panel tests

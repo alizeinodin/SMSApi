@@ -25,9 +25,15 @@ class WhatsAppDriver extends AbstractMessengerDriver
         $to = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
         $phoneNumberId = (string) ($options['phone_number_id'] ?? $this->config('phone_number_id'));
 
+        // WhatsApp Cloud API expects international digits (e.g. 98912…), not local 09….
+        $digits = preg_replace('/\D+/', '', (string) $to) ?? (string) $to;
+        if (str_starts_with($digits, '0') && strlen($digits) === 11) {
+            $digits = '98'.substr($digits, 1);
+        }
+
         $raw = $this->httpRequest('POST', $phoneNumberId.'/messages', [
             'messaging_product' => 'whatsapp',
-            'to' => ltrim(preg_replace('/\D+/', '', $to) ?? $to, '0'),
+            'to' => $digits,
             'type' => 'text',
             'text' => ['body' => $message],
         ], isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['messages']));
