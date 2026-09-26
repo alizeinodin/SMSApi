@@ -1,0 +1,132 @@
+<?php
+
+return [
+    'default' => env('SMSAPI_DRIVER', 'smsir'),
+
+    'drivers' => [
+        'smsir' => [
+            'api_key' => env('SMSAPI_API_KEY'),
+            'line_number' => env('SMSAPI_LINE_NUMBER'),
+            'base_url' => env('SMSAPI_BASE_URL', 'https://api.sms.ir/v1'),
+            'timeout' => env('SMSAPI_TIMEOUT', 30),
+        ],
+        'kavenegar' => [
+            'api_key' => env('KAVENEGAR_API_KEY'),
+            'line_number' => env('KAVENEGAR_LINE_NUMBER'),
+            'base_url' => env('KAVENEGAR_BASE_URL', 'https://api.kavenegar.com/v1'),
+            'timeout' => env('KAVENEGAR_TIMEOUT', 30),
+        ],
+        'ghasedak' => [
+            'api_key' => env('GHASEDAK_API_KEY'),
+            'line_number' => env('GHASEDAK_LINE_NUMBER'),
+            'base_url' => env('GHASEDAK_BASE_URL', 'https://api.ghasedak.me/v2'),
+            'timeout' => env('GHASEDAK_TIMEOUT', 30),
+        ],
+        'farazsms' => [
+            'api_key' => env('FARAZSMS_API_KEY'),
+            'line_number' => env('FARAZSMS_LINE_NUMBER'),
+            'base_url' => env('FARAZSMS_BASE_URL', 'https://api.iranpayamak.com'),
+            'timeout' => env('FARAZSMS_TIMEOUT', 30),
+        ],
+        'ippanel' => [
+            'api_key' => env('IPPANEL_API_KEY'),
+            'line_number' => env('IPPANEL_LINE_NUMBER'),
+            'base_url' => env('IPPANEL_BASE_URL', 'https://api2.ippanel.com/api/v1'),
+            'timeout' => env('IPPANEL_TIMEOUT', 30),
+        ],
+        'magfa' => [
+            'username' => env('MAGFA_USERNAME'),
+            'password' => env('MAGFA_PASSWORD'),
+            'domain' => env('MAGFA_DOMAIN', 'magfa'),
+            'line_number' => env('MAGFA_LINE_NUMBER'),
+            'base_url' => env('MAGFA_BASE_URL', 'https://sms.magfa.com/api/http/sms/v2'),
+            'timeout' => env('MAGFA_TIMEOUT', 30),
+        ],
+        'niksms' => [
+            'username' => env('NIKSMS_USERNAME'),
+            'password' => env('NIKSMS_PASSWORD'),
+            'line_number' => env('NIKSMS_LINE_NUMBER'),
+            'base_url' => env('NIKSMS_BASE_URL', 'https://niksms.com/api/v2'),
+            'timeout' => env('NIKSMS_TIMEOUT', 30),
+        ],
+        'mediana' => [
+            'api_key' => env('MEDIANA_API_KEY'),
+            'line_number' => env('MEDIANA_LINE_NUMBER'),
+            'base_url' => env('MEDIANA_BASE_URL', 'https://api.mediana.ir'),
+            'timeout' => env('MEDIANA_TIMEOUT', 30),
+        ],
+        'limosms' => [
+            'api_key' => env('LIMOSMS_API_KEY'),
+            'line_number' => env('LIMOSMS_LINE_NUMBER'),
+            'base_url' => env('LIMOSMS_BASE_URL', 'https://api.limosms.com'),
+            'timeout' => env('LIMOSMS_TIMEOUT', 30),
+        ],
+        'melipayamak' => [
+            'username' => env('MELIPAYAMAK_USERNAME'),
+            'password' => env('MELIPAYAMAK_PASSWORD'),
+            'line_number' => env('MELIPAYAMAK_LINE_NUMBER'),
+            'base_url' => env('MELIPAYAMAK_BASE_URL', 'https://rest.payamak-panel.com/api'),
+            'timeout' => env('MELIPAYAMAK_TIMEOUT', 30),
+        ],
+        'farapayamak' => [
+            'username' => env('FARAPAYAMAK_USERNAME'),
+            'password' => env('FARAPAYAMAK_PASSWORD'),
+            'line_number' => env('FARAPAYAMAK_LINE_NUMBER'),
+            'base_url' => env('FARAPAYAMAK_BASE_URL', 'https://rest.payamak-panel.com/api'),
+            'timeout' => env('FARAPAYAMAK_TIMEOUT', 30),
+        ],
+        'payamito' => [
+            'username' => env('PAYAMITO_USERNAME'),
+            'password' => env('PAYAMITO_PASSWORD'),
+            'line_number' => env('PAYAMITO_LINE_NUMBER'),
+            'base_url' => env('PAYAMITO_BASE_URL', 'https://rest.payamak-panel.com/api'),
+            'timeout' => env('PAYAMITO_TIMEOUT', 30),
+        ],
+        'payamaknovin' => [
+            'username' => env('PAYAMAKNOVIN_USERNAME'),
+            'password' => env('PAYAMAKNOVIN_PASSWORD'),
+            'line_number' => env('PAYAMAKNOVIN_LINE_NUMBER'),
+            'base_url' => env('PAYAMAKNOVIN_BASE_URL', 'https://rest.payamak-panel.com/api'),
+            'timeout' => env('PAYAMAKNOVIN_TIMEOUT', 30),
+        ],
+        'bahmanpayam' => [
+            'username' => env('BAHMANPAYAM_USERNAME'),
+            'password' => env('BAHMANPAYAM_PASSWORD'),
+            'line_number' => env('BAHMANPAYAM_LINE_NUMBER'),
+            'base_url' => env('BAHMANPAYAM_BASE_URL', 'https://rest.payamak-panel.com/api'),
+            'timeout' => env('BAHMANPAYAM_TIMEOUT', 30),
+        ],
+        'amoot' => [
+            'username' => env('AMOOT_USERNAME'),
+            'password' => env('AMOOT_PASSWORD'),
+            'line_number' => env('AMOOT_LINE_NUMBER'),
+            'base_url' => env('AMOOT_BASE_URL', 'https://rest.payamak-panel.com/api'),
+            'timeout' => env('AMOOT_TIMEOUT', 30),
+        ],
+        'payamresan' => [
+            'api_key' => env('PAYAMRESAN_API_KEY'),
+            'line_number' => env('PAYAMRESAN_LINE_NUMBER'),
+            'base_url' => env('PAYAMRESAN_BASE_URL', 'https://api.sms-webservice.com/api/V3'),
+            'timeout' => env('PAYAMRESAN_TIMEOUT', 30),
+        ],
+        'behinpayam' => [
+            'api_key' => env('BEHINPAYAM_API_KEY'),
+            'line_number' => env('BEHINPAYAM_LINE_NUMBER'),
+            'base_url' => env('BEHINPAYAM_BASE_URL', 'https://api.sms-webservice.com/api/V3'),
+            'timeout' => env('BEHINPAYAM_TIMEOUT', 30),
+        ],
+        'rastinsms' => [
+            'api_key' => env('RASTINSMS_API_KEY'),
+            'line_number' => env('RASTINSMS_LINE_NUMBER'),
+            'base_url' => env('RASTINSMS_BASE_URL', 'https://api.sms-webservice.com/api/V3'),
+            'timeout' => env('RASTINSMS_TIMEOUT', 30),
+        ],
+        'avanak' => [
+            'api_token' => env('AVANAK_API_TOKEN'),
+            'otp_length' => env('AVANAK_OTP_LENGTH', 5),
+            'server_id' => env('AVANAK_SERVER_ID', 0),
+            'base_url' => env('AVANAK_BASE_URL', 'https://portal.avanak.ir/rest'),
+            'timeout' => env('AVANAK_TIMEOUT', 30),
+        ],
+    ],
+];

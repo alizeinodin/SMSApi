@@ -1,49 +1,68 @@
-# پکیج لاراول SMS
+# SMSApi
 
-با استفاده از این پکیج می توانید به پنل خود در وب سایت [sms.ir](https://sms.ir) متصل شوید و یک سیستم ارسال و دریافت SMS ایرانی در لاراول داشته باشید.
+Laravel package for Iranian SMS panels (sms.ir, Kavenegar, Ghasedak, Farazsms, IPPanel, Magfa, Niksms, …).
 
-> به خاطر تحریم هایی که علیه ایران وجود دارد، اتصال به پنل های SMS که فریمورک لاراول به صورت پیش فرض قرار داده است، وجود ندارد.
-وب سایت sms.ir یکی از وب سایت های معروف ارائه دهنده خدمات SMS در کشور است. با استفاده از این پکیج می توانید از وب سرویس های Restful این شرکت در لارول استفاده کنید.
-
-## ویژگی ها
-- استفاده از کتابخانه CURL
-- ارسال و دریافت SMS
-- کد فعالسازی
-- ارسال پیامک به صورت انبوه
-- ارسال پیامک با template
-- باشگاه مشتریان
-- و...
-
-## نصب پکیج
-نصب با استفاده از کامپوزر:
-```
-composer require alizne/smsapi
+```bash
+composer require alizeinodin/smsapi
 ```
 
-```
-php artisan vendor:publish --provider="Alizne\SmsApi\SmsApiServiceProvider"
-```
+## Sandbox / live panel tests
 
-سپس در فایل env لاراول این موارد را اضافه کنید:
-```
-SMSAPI_API_KEY="Your Api Key"
-SMSAPI_SECRET_KEY="Your Secret Key"
-SMSAPI_LINE_NUMBER="Your Line Number"
-```
-مقادیر Api Key ، Secret Key و Line Number در پروفایل کاربری شما در [sms.ir](https://sms.ir) موجود است.
+Only **sms.ir** documents an official Sandbox API key. Other panels use your test account credentials against the real API.
 
+1. Copy `.env.sandbox.example` → `.env.sandbox` and fill credentials.
+2. Unit tests (default, no network):
 
-### پیش نیاز
-
-| پیش نیاز  | حداقل نسخه |
-| ------------- | ------------- |
-|  PHP | 8.X  |
-| ext-curl | * |
-
-## بیشتر
-اگر برای اجرای این پکیج روی local با مشکل SSL مواجه شدید. می توانید در فایل SMSApi.php این موارد را ویرایش کنید و به false تغییر دهید. 
-```
-CURLOPT_SSL_VERIFYHOST => false,
-CURLOPT_SSL_VERIFYPEER => false,
+```bash
+composer test
+# or: vendor/bin/phpunit --exclude-group sandbox
 ```
 
+3. Live sandbox tests:
+
+```bash
+composer test:sandbox
+# or: vendor/bin/phpunit --group sandbox
+```
+
+Missing credentials → tests are **skipped**, not failed.
+
+### sms.ir Sandbox
+
+Create an API key with type **Sandbox** in the panel, then:
+
+```env
+SMSAPI_API_KEY=your-sandbox-key
+SMSAPI_SANDBOX_MOBILE=0912xxxxxxx
+```
+
+The verify call uses template `123456` and parameter `Code` (no real SMS / no credit).
+
+```php
+use Alizeinodin\SmsApi\Registry\DriverRegistry;
+
+$driver = DriverRegistry::make('smsir', [
+    'api_key' => env('SMSAPI_API_KEY'),
+]);
+
+$driver->sendSandboxVerify('09121234567', '12345');
+```
+
+## Drivers
+
+| Config key | Provider |
+|------------|----------|
+| `smsir` | sms.ir |
+| `kavenegar` | Kavenegar |
+| `ghasedak` | Ghasedak |
+| `farazsms` | Farazsms |
+| `ippanel` | IPPanel |
+| `magfa` | Magfa |
+| `niksms` | Niksms |
+| `mediana` | Mediana |
+| `limosms` | Limosms |
+| `melipayamak` / `farapayamak` / `payamito` / `payamaknovin` / `bahmanpayam` / `amoot` | Payamak-panel family |
+| `payamresan` / `behinpayam` / `rastinsms` | sms-webservice V3 |
+| `avanak` | Avanak (voice) |
+
+See `.env.sandbox.example` for every credential key.
