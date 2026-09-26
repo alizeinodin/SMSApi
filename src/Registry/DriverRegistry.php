@@ -16,6 +16,18 @@ use Alizeinodin\SmsApi\Drivers\LimosmsDriver;
 use Alizeinodin\SmsApi\Drivers\MagfaDriver;
 use Alizeinodin\SmsApi\Drivers\MedianaDriver;
 use Alizeinodin\SmsApi\Drivers\MelipayamakDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\BaleDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\DiscordDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\EitaaDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\FacebookMessengerDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\GapDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\IgapDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\LineDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\RubikaDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\SlackDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\TelegramDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\ViberDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\WhatsAppDriver;
 use Alizeinodin\SmsApi\Drivers\NiksmsDriver;
 use Alizeinodin\SmsApi\Drivers\PayamaknovinDriver;
 use Alizeinodin\SmsApi\Drivers\PayamitoDriver;
@@ -48,6 +60,18 @@ final class DriverRegistry
         'behinpayam' => BehinpayamDriver::class,
         'rastinsms' => RastinsmsDriver::class,
         'avanak' => AvanakDriver::class,
+        'telegram' => TelegramDriver::class,
+        'whatsapp' => WhatsAppDriver::class,
+        'bale' => BaleDriver::class,
+        'eitaa' => EitaaDriver::class,
+        'rubika' => RubikaDriver::class,
+        'gap' => GapDriver::class,
+        'igap' => IgapDriver::class,
+        'messenger' => FacebookMessengerDriver::class,
+        'viber' => ViberDriver::class,
+        'line' => LineDriver::class,
+        'discord' => DiscordDriver::class,
+        'slack' => SlackDriver::class,
     ];
 
     /**

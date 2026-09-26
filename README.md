@@ -66,3 +66,14 @@ $driver->sendSandboxVerify('09121234567', '12345');
 | `avanak` | Avanak (voice) |
 
 See `.env.sandbox.example` for every credential key.
+
+
+## Verification without panel accounts
+
+Unit tests compare request shapes with official SDKs (Ghasedak, IPPanel, sms.ir, Kavenegar, LimoSMS, Mediana, Telegram, …) and check that public API hosts are reachable.
+
+```bash
+vendor/bin/phpunit --exclude-group sandbox
+```
+
+For Ghasedak without registration, calling `accountInfo()` with any key returns a structured API error (e.g. invalid apikey) — that confirms the HTTP contract is correct.

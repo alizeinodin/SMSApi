@@ -29,6 +29,8 @@ class DriverRegistryTest extends TestCase
             'smsir', 'kavenegar', 'ghasedak', 'farazsms', 'ippanel', 'magfa', 'niksms',
             'mediana', 'limosms', 'melipayamak', 'farapayamak', 'payamito', 'payamaknovin',
             'bahmanpayam', 'amoot', 'payamresan', 'behinpayam', 'rastinsms', 'avanak',
+            'telegram', 'whatsapp', 'bale', 'eitaa', 'rubika', 'gap', 'igap',
+            'messenger', 'viber', 'line', 'discord', 'slack',
         ] as $driver) {
             $this->assertArrayHasKey($driver, $all, "Missing driver map entry: {$driver}");
             $this->assertTrue(DriverRegistry::has($driver));

@@ -6,7 +6,11 @@ use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
-/** @see https://ghasedak.me/docs */
+/**
+ * Ghasedak v2 REST API (official SDK: ghasedakapi/ghasedak-php).
+ *
+ * @see https://github.com/ghasedakapi/ghasedak-php
+ */
 class GhasedakDriver extends AbstractDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
@@ -22,35 +26,68 @@ class GhasedakDriver extends AbstractDriver
     public function send(string|array $recipients, string $message, array $options = []): SendResult
     {
         $mobiles = $this->normalizeMobiles($recipients);
+        $line = $options['lineNumber'] ?? $this->lineNumber;
 
-        return $this->map($this->request('POST', 'sms/send/simple', [
+        $payload = [
             'receptor' => implode(',', $mobiles),
             'message' => $message,
-            'linenumber' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
-        ]));
+        ];
+
+        // Official SDK allows null linenumber when a dedicated line exists.
+        if ($line !== null && $line !== '') {
+            $payload['linenumber'] = (string) $line;
+        }
+
+        if (isset($options['senddate'])) {
+            $payload['senddate'] = $options['senddate'];
+        }
+        if (isset($options['checkid'])) {
+            $payload['checkid'] = $options['checkid'];
+        }
+
+        return $this->map($this->request('POST', 'sms/send/simple', $payload));
     }
 
     public function bulk(string $message, array $recipients, array $options = []): SendResult
     {
-        return $this->send($recipients, $message, $options);
+        $mobiles = array_values($this->normalizeMobiles($recipients));
+        $line = $options['lineNumber'] ?? $this->lineNumber;
+
+        return $this->map($this->request('POST', 'sms/send/bulk', [
+            'receptor' => implode(',', $mobiles),
+            'linenumber' => $line !== null && $line !== '' ? (string) $line : null,
+            'message' => $message,
+        ]));
     }
 
     public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
         $payload = [
             'receptor' => $this->normalizeMobiles($mobile)[0] ?? $mobile,
-            'type' => 1,
+            'type' => (int) ($options['type'] ?? 1),
             'template' => (string) $templateId,
         ];
 
         $i = 1;
-        foreach ($parameters as $key => $value) {
-            $val = is_array($value) ? (string) ($value['value'] ?? '') : (string) $value;
-            $payload['param'.$i] = $val;
+        foreach ($parameters as $value) {
+            $payload['param'.$i] = is_array($value) ? (string) ($value['value'] ?? '') : (string) $value;
             $i++;
+            if ($i > 10) {
+                break;
+            }
         }
 
         return $this->map($this->request('POST', 'verification/send/simple', $payload));
+    }
+
+    /**
+     * Account info — useful connectivity check without sending SMS.
+     *
+     * @see GhasedakApi::AccountInfo()
+     */
+    public function accountInfo(): SendResult
+    {
+        return $this->map($this->request('GET', 'account/info'));
     }
 
     /** @param  array<string, mixed>  $config */
@@ -58,7 +95,12 @@ class GhasedakDriver extends AbstractDriver
     {
         return $this->buildClient(
             (string) ($config['base_url'] ?? 'https://api.ghasedak.me/v2'),
-            ['apikey' => (string) ($config['api_key'] ?? '')],
+            [
+                'apikey' => (string) ($config['api_key'] ?? ''),
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'charset' => 'utf-8',
+            ],
         );
     }
 
@@ -77,13 +119,25 @@ class GhasedakDriver extends AbstractDriver
             throw new SmsApiException('Ghasedak api_key is not configured.');
         }
 
-        return $this->httpRequest(
-            $method,
-            $uri,
-            $payload,
-            isSuccessful: fn (array $decoded): bool => (int) ($decoded['result']['code'] ?? 0) === 200,
-            bodyMode: 'form',
-        );
+        // Official SDK appends ?agent=core-* on every call.
+        $query = ['agent' => (string) ($this->config('agent', 'php-smsapi'))];
+
+        try {
+            return $this->httpRequest(
+                $method,
+                $uri,
+                array_filter($payload, fn ($v) => $v !== null),
+                $query,
+                isSuccessful: fn (array $decoded): bool => (int) ($decoded['result']['code'] ?? 0) === 200,
+                bodyMode: 'form',
+            );
+        } catch (SmsApiException $e) {
+            $context = $e->context ?? [];
+            $message = (string) ($context['result']['message'] ?? $e->getMessage());
+            $code = (int) ($context['result']['code'] ?? $e->getCode());
+
+            throw new SmsApiException($message, $code, $context, $e);
+        }
     }
 
     /** @param  array<string, mixed>  $raw */

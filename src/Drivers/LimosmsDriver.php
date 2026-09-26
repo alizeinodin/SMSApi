@@ -6,6 +6,11 @@ use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
+/**
+ * LimoSMS REST API.
+ *
+ * @see https://api.limosms.com/
+ */
 class LimosmsDriver extends AbstractDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
@@ -20,12 +25,12 @@ class LimosmsDriver extends AbstractDriver
 
     public function send(string|array $recipients, string $message, array $options = []): SendResult
     {
-        $mobiles = $this->normalizeMobiles($recipients);
+        $mobiles = array_values($this->normalizeMobiles($recipients));
 
-        return $this->map($this->request('POST', 'api/sendMessage', [
-            'MobileNumbers' => $mobiles,
-            'MessageText' => $message,
-            'SenderId' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
+        return $this->map($this->request('POST', 'api/sendsms', [
+            'MobileNumber' => $mobiles,
+            'Message' => $message,
+            'SenderNumber' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
         ]));
     }
 
@@ -39,7 +44,11 @@ class LimosmsDriver extends AbstractDriver
     {
         return $this->buildClient(
             (string) ($config['base_url'] ?? 'https://api.limosms.com'),
-            ['ApiKey' => (string) ($config['api_key'] ?? '')],
+            [
+                'ApiKey' => (string) ($config['api_key'] ?? ''),
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ],
         );
     }
 
@@ -62,13 +71,22 @@ class LimosmsDriver extends AbstractDriver
             $method,
             $uri,
             $payload,
-            isSuccessful: fn (array $decoded, int $status): bool => $status < 400,
+            isSuccessful: fn (array $decoded, int $status): bool => $status < 400
+                && ($decoded['Success'] ?? false) === true,
         );
     }
 
     /** @param  array<string, mixed>  $raw */
     protected function map(array $raw): SendResult
     {
-        return $this->toResponse($raw, success: true, message: (string) ($raw['message'] ?? 'OK'));
+        $ids = $raw['MessageId'] ?? null;
+        $messageId = is_array($ids) ? (string) ($ids[0] ?? '') : (isset($ids) ? (string) $ids : null);
+
+        return $this->toResponse(
+            $raw,
+            success: ($raw['Success'] ?? false) === true,
+            message: (string) ($raw['Message'] ?? 'OK'),
+            messageId: $messageId !== '' ? $messageId : null,
+        );
     }
 }

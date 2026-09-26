@@ -23,10 +23,19 @@ class IppanelDriver extends AbstractDriver
         $mobiles = array_values($this->normalizeMobiles($recipients));
 
         return $this->map($this->request('POST', 'sms/send/webservice/single', [
-            'recipient' => $mobiles,
             'sender' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
+            'recipient' => $mobiles,
             'message' => $message,
+            'description' => [
+                'summary' => (string) ($options['summary'] ?? 'smsapi'),
+                'count_recipient' => (string) count($mobiles),
+            ],
         ]));
+    }
+
+    public function getCredit(): SendResult
+    {
+        return $this->map($this->request('GET', 'sms/accounting/credit/show'));
     }
 
     public function bulk(string $message, array $recipients, array $options = []): SendResult
@@ -55,9 +64,15 @@ class IppanelDriver extends AbstractDriver
     {
         $apiKey = (string) ($config['api_key'] ?? '');
 
+        // Official IPPanel SDK uses header: apikey: {key}
+        // @see https://github.com/IPPanel/php-rest-sdk
         return $this->buildClient(
             (string) ($config['base_url'] ?? 'https://api2.ippanel.com/api/v1'),
-            ['Authorization' => $apiKey, 'Content-Type' => 'application/json'],
+            [
+                'apikey' => $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ],
         );
     }
 

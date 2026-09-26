@@ -6,6 +6,11 @@ use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
+/**
+ * Mediana REST (IPPanel-compatible AccessKey API).
+ *
+ * @see https://github.com/medianasms/python-rest-sdk
+ */
 class MedianaDriver extends AbstractDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
@@ -22,9 +27,9 @@ class MedianaDriver extends AbstractDriver
     {
         $mobiles = array_values($this->normalizeMobiles($recipients));
 
-        return $this->map($this->request('POST', 'sms/send', [
-            'receptor' => $mobiles,
-            'sender' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
+        return $this->map($this->request('POST', 'v1/messages', [
+            'originator' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
+            'recipients' => $mobiles,
             'message' => $message,
         ]));
     }
@@ -37,9 +42,15 @@ class MedianaDriver extends AbstractDriver
     /** @param  array<string, mixed>  $config */
     protected function makeClient(array $config): Client
     {
+        $apiKey = (string) ($config['api_key'] ?? '');
+
         return $this->buildClient(
             (string) ($config['base_url'] ?? 'https://api.mediana.ir'),
-            ['Authorization' => 'Bearer '.(string) ($config['api_key'] ?? '')],
+            [
+                'Authorization' => 'AccessKey '.$apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ],
         );
     }
 
@@ -62,13 +73,21 @@ class MedianaDriver extends AbstractDriver
             $method,
             $uri,
             $payload,
-            isSuccessful: fn (array $decoded, int $status): bool => $status < 400,
+            isSuccessful: fn (array $decoded, int $status): bool => $status < 400
+                && isset($decoded['data']['bulk_id']),
         );
     }
 
     /** @param  array<string, mixed>  $raw */
     protected function map(array $raw): SendResult
     {
-        return $this->toResponse($raw, success: true, message: (string) ($raw['message'] ?? 'OK'));
+        $bulkId = $raw['data']['bulk_id'] ?? null;
+
+        return $this->toResponse(
+            $raw,
+            success: true,
+            message: (string) ($raw['status'] ?? 'OK'),
+            messageId: $bulkId !== null ? (string) $bulkId : null,
+        );
     }
 }
