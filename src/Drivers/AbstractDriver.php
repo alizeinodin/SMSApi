@@ -4,6 +4,7 @@ namespace Alizeinodin\SmsApi\Drivers;
 
 use Alizeinodin\SmsApi\Contracts\SmsDriver;
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\InvalidPhoneNumberException;
 use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use Alizeinodin\SmsApi\Support\PhoneNumber;
 use GuzzleHttp\Client;
@@ -45,41 +46,65 @@ abstract class AbstractDriver extends AbstractHttpDriver implements SmsDriver
         return is_string($channel) && $channel !== '' ? $channel : 'sms';
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function send(string|array $recipients, string $message, array $options = []): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function bulk(string $message, array $recipients, array $options = []): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function sendMapped(array $messages, array $mobiles, array $options = []): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function cancelScheduled(string $packId): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getMessage(int $messageId): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getPack(string $packId): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getPacks(int $pageNumber = 1, int $pageSize = 100): SendResult
     {
         return $this->unsupported(__FUNCTION__);
@@ -94,6 +119,9 @@ abstract class AbstractDriver extends AbstractHttpDriver implements SmsDriver
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getArchivedSends(
         int $pageNumber = 1,
         int $pageSize = 100,
@@ -105,11 +133,17 @@ abstract class AbstractDriver extends AbstractHttpDriver implements SmsDriver
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getLatestReceived(int $count = 100): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getLiveReceived(
         int $pageNumber = 1,
         int $pageSize = 100,
@@ -119,6 +153,9 @@ abstract class AbstractDriver extends AbstractHttpDriver implements SmsDriver
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getArchivedReceived(
         int $pageNumber = 1,
         int $pageSize = 100,
@@ -129,11 +166,17 @@ abstract class AbstractDriver extends AbstractHttpDriver implements SmsDriver
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getCredit(): SendResult
     {
         return $this->unsupported(__FUNCTION__);
     }
 
+    /**
+     * @throws UnsupportedDriverMethodException
+     */
     public function getLines(): SendResult
     {
         return $this->unsupported(__FUNCTION__);
@@ -159,8 +202,9 @@ abstract class AbstractDriver extends AbstractHttpDriver implements SmsDriver
     }
 
     /**
-     * @param  string|array<int, string>  $mobiles
+     * @param string|array<int, string> $mobiles
      * @return array<int, string>
+     * @throws InvalidPhoneNumberException
      */
     protected function normalizeMobiles(string|array $mobiles): array
     {
