@@ -35,10 +35,12 @@ class SmsIrDriver extends AbstractDriver
 
     public function bulk(string $message, array $mobiles, array $options = []): SendResult
     {
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+
         $raw = $this->smsIrRequest('POST', 'send/bulk', [
             'lineNumber' => $this->resolveLineNumber($options['lineNumber'] ?? null),
             'messageText' => $message,
-            'mobiles' => array_values($mobiles),
+            'mobiles' => $mobiles,
             'sendDateTime' => $options['sendDateTime'] ?? null,
         ]);
 
@@ -47,10 +49,12 @@ class SmsIrDriver extends AbstractDriver
 
     public function sendMapped(array $messages, array $mobiles, array $options = []): SendResult
     {
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+
         $raw = $this->smsIrRequest('POST', 'send/likeTolike', [
             'lineNumber' => $this->resolveLineNumber($options['lineNumber'] ?? null),
             'messageTexts' => array_values($messages),
-            'mobiles' => array_values($mobiles),
+            'mobiles' => $mobiles,
             'sendDateTime' => $options['sendDateTime'] ?? null,
         ]);
 
@@ -59,6 +63,8 @@ class SmsIrDriver extends AbstractDriver
 
     public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
+        $mobile = $this->normalizeMobiles($mobile)[0] ?? $mobile;
+
         $raw = $this->smsIrRequest('POST', 'send/verify', [
             'mobile' => $mobile,
             'templateId' => (int) $templateId,
