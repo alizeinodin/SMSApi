@@ -135,7 +135,7 @@ class PanelSandboxTest extends TestCase
             // smsir covered by dedicated sandbox verify test
             'kavenegar' => [
                 'kavenegar',
-                ['KAVENEGAR_API_KEY', 'KAVENEGAR_LINE_NUMBER', 'KAVENEGAR_TEMPLATE'],
+                ['KAVENEGAR_API_KEY', 'KAVENEGAR_TEMPLATE'],
                 ['api_key' => 'KAVENEGAR_API_KEY', 'line_number' => 'KAVENEGAR_LINE_NUMBER'],
                 'template',
             ],

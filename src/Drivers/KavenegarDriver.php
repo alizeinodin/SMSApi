@@ -88,14 +88,22 @@ class KavenegarDriver extends AbstractDriver
             throw new SmsApiException('Kavenegar api_key is not configured.');
         }
 
-        return $this->httpRequest(
-            $method,
-            $uri,
-            $payload,
-            $query,
-            fn (array $decoded): bool => (int) ($decoded['return']['status'] ?? 0) === 200,
-            bodyMode: 'form',
-        );
+        try {
+            return $this->httpRequest(
+                $method,
+                $uri,
+                $payload,
+                $query,
+                fn (array $decoded): bool => (int) ($decoded['return']['status'] ?? 0) === 200,
+                bodyMode: 'form',
+            );
+        } catch (SmsApiException $e) {
+            $context = $e->context ?? [];
+            $message = (string) ($context['return']['message'] ?? $e->getMessage());
+            $code = (int) ($context['return']['status'] ?? $e->getCode());
+
+            throw new SmsApiException($message, $code, $context, $e);
+        }
     }
 
     /** @param  array<string, mixed>  $options */
