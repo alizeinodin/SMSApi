@@ -88,11 +88,23 @@ See `.env.sandbox.example` for every credential key.
 ## Messengers
 
 Configured under the same `drivers` map (`telegram`, `bale`, `eitaa`, `gap`, `whatsapp`, …).
-`igap` is experimental: default host `bot.igap.net` currently does not resolve; official iGap APIs are Protocol Buffers / WebSocket.
+
+| Driver | Core send | Notes |
+|--------|-----------|-------|
+| `telegram` / `bale` / `eitaa` / `gap` | text | Minimal bot send; Gap requires `type=text` |
+| `whatsapp` | text + **templates** | `sendTemplate($mobile, 'template_name', $vars, ['language' => 'fa'])` |
+| `messenger` | text | Override `messaging_type` / `tag` via options |
+| `slack` | text | Optional `blocks`, `thread_ts` |
+| `discord` | text | Optional `embeds` |
+| `viber` / `line` | text | LINE accepts empty 200 body; optional custom `messages` |
+| `rubika` | text | May time out from non-IR networks |
+| `igap` | experimental | Default host `bot.igap.net` is NXDOMAIN; official iGap is protobuf/WebSocket |
+
+Foreign messengers are **send-focused adapters**, not full Bot SDKs (no webhooks, media upload pipelines, or conversation state).
 
 ## Verification without panel accounts
 
-Unit tests compare request shapes with official SDKs (Ghasedak, IPPanel, sms.ir, Kavenegar, LimoSMS, Mediana, Telegram, Gap, …) and check that public API hosts are reachable.
+Unit tests compare request shapes with official SDKs (Ghasedak, IPPanel, sms.ir, Kavenegar, LimoSMS, Mediana, Telegram, Gap, WhatsApp template, …) and check that public API hosts are reachable.
 
 ```bash
 vendor/bin/phpunit --exclude-group sandbox

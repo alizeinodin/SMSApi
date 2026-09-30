@@ -22,13 +22,24 @@ class FacebookMessengerDriver extends AbstractMessengerDriver
     {
         $this->ensureConfigured('page_access_token', 'page_access_token');
         $to = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
-        $pageId = (string) ($this->config('page_id', 'me'));
+        $pageId = (string) ($options['page_id'] ?? $this->config('page_id', 'me'));
+        $messagingType = (string) ($options['messaging_type'] ?? $this->config('messaging_type', 'RESPONSE'));
 
-        $raw = $this->httpRequest('POST', $pageId.'/messages', [
+        $payload = [
             'recipient' => ['id' => $to],
-            'messaging_type' => 'RESPONSE',
+            'messaging_type' => $messagingType,
             'message' => ['text' => $message],
-        ], isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['message_id']));
+        ];
+
+        if (isset($options['tag']) || $this->config('tag')) {
+            $payload['tag'] = (string) ($options['tag'] ?? $this->config('tag'));
+        }
+
+        if (isset($options['notification_type'])) {
+            $payload['notification_type'] = (string) $options['notification_type'];
+        }
+
+        $raw = $this->httpRequest('POST', $pageId.'/messages', $payload, isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['message_id']));
 
         return $this->toMessengerResponse($raw, $raw['message_id'] ?? null);
     }

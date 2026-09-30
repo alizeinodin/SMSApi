@@ -152,24 +152,37 @@ abstract class AbstractDriver implements SmsDriver
         }
 
         $body = (string) $response->getBody();
+        $status = $response->getStatusCode();
+
+        if (trim($body) === '') {
+            if ($status < 400) {
+                return [];
+            }
+
+            throw new SmsApiException(
+                sprintf('Empty error response from [%s].', $this->getName()),
+                $status,
+            );
+        }
+
         $decoded = json_decode($body, true);
 
         if (! is_array($decoded)) {
             throw new SmsApiException(
                 sprintf('Invalid JSON response from [%s].', $this->getName()),
-                $response->getStatusCode(),
+                $status,
                 ['raw' => $body],
             );
         }
 
         $successful = $isSuccessful
-            ? (bool) $isSuccessful($decoded, $response->getStatusCode())
-            : $response->getStatusCode() < 400;
+            ? (bool) $isSuccessful($decoded, $status)
+            : $status < 400;
 
         if (! $successful) {
             throw new SmsApiException(
                 $this->extractErrorMessage($decoded),
-                (int) ($decoded['status'] ?? $decoded['Status'] ?? $decoded['error_code'] ?? $response->getStatusCode()),
+                (int) ($decoded['status'] ?? $decoded['Status'] ?? $decoded['error_code'] ?? $status),
                 $decoded,
             );
         }

@@ -22,3 +22,9 @@
 - Gap `sendMessage` now sends required `type=text` (official Gap bot API)
 - API error messages now read `description` / `error` / `status_message` (not only `message`)
 - Documented iGap default host `bot.igap.net` as currently unresolved (experimental driver)
+- Empty HTTP 200 bodies (e.g. LINE) no longer throw Invalid JSON
+
+### Changed
+- WhatsApp: real Cloud API `sendTemplate()` (name + language + body components)
+- Facebook Messenger: configurable `messaging_type` / `tag` / `notification_type`
+- Slack / Discord / LINE: optional richer payload fields via `$options`

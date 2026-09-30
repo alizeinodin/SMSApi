@@ -23,10 +23,13 @@ class SlackDriver extends AbstractMessengerDriver
         $this->ensureConfigured('bot_token', 'bot_token');
         $channel = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
 
-        $raw = $this->httpRequest('POST', 'chat.postMessage', [
+        $raw = $this->httpRequest('POST', 'chat.postMessage', array_filter([
             'channel' => $channel,
             'text' => $message,
-        ], isSuccessful: fn (array $d): bool => ($d['ok'] ?? false) === true);
+            'blocks' => $options['blocks'] ?? null,
+            'thread_ts' => $options['thread_ts'] ?? null,
+            'mrkdwn' => $options['mrkdwn'] ?? null,
+        ], fn ($v) => $v !== null), isSuccessful: fn (array $d): bool => ($d['ok'] ?? false) === true);
 
         return $this->toMessengerResponse($raw, $raw['ts'] ?? null, ($raw['ok'] ?? false) === true);
     }

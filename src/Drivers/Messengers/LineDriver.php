@@ -23,9 +23,11 @@ class LineDriver extends AbstractMessengerDriver
         $this->ensureConfigured('channel_access_token', 'channel_access_token');
         $to = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
 
+        $messages = $options['messages'] ?? [['type' => 'text', 'text' => $message]];
+
         $raw = $this->httpRequest('POST', 'message/push', [
             'to' => $to,
-            'messages' => [['type' => 'text', 'text' => $message]],
+            'messages' => $messages,
         ], isSuccessful: fn (array $d, int $s): bool => $s < 400);
 
         return $this->toMessengerResponse($raw);

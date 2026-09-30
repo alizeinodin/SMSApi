@@ -23,9 +23,13 @@ class DiscordDriver extends AbstractMessengerDriver
         $this->ensureConfigured('bot_token', 'bot_token');
         $channelId = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
 
-        $raw = $this->httpRequest('POST', 'channels/'.$channelId.'/messages', [
+        $payload = array_filter([
             'content' => $message,
-        ], isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['id']));
+            'embeds' => $options['embeds'] ?? null,
+            'tts' => $options['tts'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        $raw = $this->httpRequest('POST', 'channels/'.$channelId.'/messages', $payload, isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['id']));
 
         return $this->toMessengerResponse($raw, $raw['id'] ?? null);
     }
