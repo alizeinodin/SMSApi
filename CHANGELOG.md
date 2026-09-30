@@ -19,3 +19,6 @@
 - LICENSE aligned with MIT (was GPL file vs MIT in composer.json)
 - WhatsApp recipient formatting uses international digits (98…)
 - Ghasedak / IPPanel / Mediana / LimoSMS request contracts matched to official SDKs
+- Gap `sendMessage` now sends required `type=text` (official Gap bot API)
+- API error messages now read `description` / `error` / `status_message` (not only `message`)
+- Documented iGap default host `bot.igap.net` as currently unresolved (experimental driver)

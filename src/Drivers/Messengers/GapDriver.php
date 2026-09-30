@@ -24,6 +24,7 @@ class GapDriver extends AbstractMessengerDriver
 
         $raw = $this->httpRequest('POST', 'sendMessage', [
             'chat_id' => $chatId,
+            'type' => (string) ($options['type'] ?? 'text'),
             'data' => $message,
         ], isSuccessful: fn (array $d, int $s): bool => $s < 400, bodyMode: 'form');
 

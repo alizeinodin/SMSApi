@@ -29,7 +29,14 @@ class EndpointReachabilityTest extends TestCase
             'telegram' => ['https://api.telegram.org'],
             'bale' => ['https://tapi.bale.ai'],
             'eitaa' => ['https://eitaayar.ir'],
+            'gap' => ['https://api.gap.im'],
             'slack' => ['https://slack.com'],
+            'discord' => ['https://discord.com/api'],
+            'viber' => ['https://chatapi.viber.com'],
+            'line' => ['https://api.line.me'],
+            'facebook_graph' => ['https://graph.facebook.com'],
+            // Rubika often TLS-times-out from non-IR egress; skip via timeout branch below.
+            'rubika' => ['https://botapi.rubika.ir'],
         ];
     }
 

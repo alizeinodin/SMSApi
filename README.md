@@ -85,12 +85,19 @@ $driver->sendSandboxVerify('09121234567', '12345');
 See `.env.sandbox.example` for every credential key.
 
 
+## Messengers
+
+Configured under the same `drivers` map (`telegram`, `bale`, `eitaa`, `gap`, `whatsapp`, …).
+`igap` is experimental: default host `bot.igap.net` currently does not resolve; official iGap APIs are Protocol Buffers / WebSocket.
+
 ## Verification without panel accounts
 
-Unit tests compare request shapes with official SDKs (Ghasedak, IPPanel, sms.ir, Kavenegar, LimoSMS, Mediana, Telegram, …) and check that public API hosts are reachable.
+Unit tests compare request shapes with official SDKs (Ghasedak, IPPanel, sms.ir, Kavenegar, LimoSMS, Mediana, Telegram, Gap, …) and check that public API hosts are reachable.
 
 ```bash
 vendor/bin/phpunit --exclude-group sandbox
 ```
 
 For Ghasedak without registration, calling `accountInfo()` with any key returns a structured API error (e.g. invalid apikey) — that confirms the HTTP contract is correct.
+
+Live send confidence still needs real API keys for the panels/messengers you ship; contract + reachability alone do not prove delivery.

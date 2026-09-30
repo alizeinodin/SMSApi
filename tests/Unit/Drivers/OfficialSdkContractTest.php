@@ -7,8 +7,10 @@ use Alizeinodin\SmsApi\Drivers\IppanelDriver;
 use Alizeinodin\SmsApi\Drivers\KavenegarDriver;
 use Alizeinodin\SmsApi\Drivers\LimosmsDriver;
 use Alizeinodin\SmsApi\Drivers\MedianaDriver;
+use Alizeinodin\SmsApi\Drivers\Messengers\GapDriver;
 use Alizeinodin\SmsApi\Drivers\Messengers\TelegramDriver;
 use Alizeinodin\SmsApi\Drivers\SmsIrDriver;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -188,6 +190,49 @@ class OfficialSdkContractTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertSame('7', $result->messageId);
         $this->assertStringContainsString('sendMessage', (string) $history[0]['request']->getUri());
+    }
+
+    public function test_gap_send_includes_required_type_field(): void
+    {
+        $history = [];
+        $driver = $this->driverWithHistory(
+            GapDriver::class,
+            ['token' => 'gap-token'],
+            'https://api.gap.im/',
+            [['id' => 1]],
+            $history,
+            ['token' => 'gap-token'],
+        );
+
+        $driver->send('991234567', 'hello');
+
+        $request = $history[0]['request'];
+        $this->assertSame('POST', $request->getMethod());
+        $this->assertStringContainsString('sendMessage', (string) $request->getUri());
+        parse_str((string) $request->getBody(), $form);
+        $this->assertSame('991234567', $form['chat_id']);
+        $this->assertSame('text', $form['type']);
+        $this->assertSame('hello', $form['data']);
+    }
+
+    public function test_api_error_prefers_description_and_error_fields(): void
+    {
+        $history = [];
+        $driver = $this->driverWithHistory(
+            TelegramDriver::class,
+            ['bot_token' => 'TOKEN'],
+            'https://api.telegram.org/botTOKEN/',
+            [['ok' => false, 'error_code' => 401, 'description' => 'Unauthorized']],
+            $history,
+        );
+
+        try {
+            $driver->send('1', 'x');
+            $this->fail('Expected SmsApiException');
+        } catch (SmsApiException $e) {
+            $this->assertSame('Unauthorized', $e->getMessage());
+            $this->assertSame(401, $e->getCode());
+        }
     }
 
     /**

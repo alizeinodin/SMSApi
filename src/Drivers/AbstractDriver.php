@@ -168,13 +168,37 @@ abstract class AbstractDriver implements SmsDriver
 
         if (! $successful) {
             throw new SmsApiException(
-                (string) ($decoded['message'] ?? $decoded['Message'] ?? sprintf('Unknown error from [%s].', $this->getName())),
-                (int) ($decoded['status'] ?? $decoded['Status'] ?? $response->getStatusCode()),
+                $this->extractErrorMessage($decoded),
+                (int) ($decoded['status'] ?? $decoded['Status'] ?? $decoded['error_code'] ?? $response->getStatusCode()),
                 $decoded,
             );
         }
 
         return $decoded;
+    }
+
+    /**
+     * @param  array<string, mixed>  $decoded
+     */
+    protected function extractErrorMessage(array $decoded): string
+    {
+        foreach (['description', 'message', 'Message', 'status_message'] as $key) {
+            if (isset($decoded[$key]) && is_string($decoded[$key]) && $decoded[$key] !== '') {
+                return $decoded[$key];
+            }
+        }
+
+        if (isset($decoded['error'])) {
+            if (is_string($decoded['error']) && $decoded['error'] !== '') {
+                return $decoded['error'];
+            }
+
+            if (is_array($decoded['error']) && isset($decoded['error']['message']) && is_string($decoded['error']['message'])) {
+                return $decoded['error']['message'];
+            }
+        }
+
+        return sprintf('Unknown error from [%s].', $this->getName());
     }
 
     protected function resolveLine(?string $override = null): string

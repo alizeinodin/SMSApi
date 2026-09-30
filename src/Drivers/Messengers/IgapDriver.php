@@ -5,6 +5,11 @@ namespace Alizeinodin\SmsApi\Drivers\Messengers;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use GuzzleHttp\Client;
 
+/**
+ * Experimental: historical Telegram-style host `bot.igap.net` currently does not resolve (NXDOMAIN).
+ * Official iGap client APIs use Protocol Buffers / WebSocket, not this REST shape.
+ * Override `base_url` only if you have a working bot gateway.
+ */
 class IgapDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
