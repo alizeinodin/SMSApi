@@ -1,14 +1,20 @@
 # Changelog
 
+## v2.1.0 - 2026-10-10
+
+### Breaking
+- Packagist / Composer package rename: `alizne/smsapi` → `alizeinodin/smsapi`
+- `replace` includes `alizne/smsapi` so existing installs can migrate cleanly
+
 ## v2.0.1 - 2026-10-10
 
 ### Fixed
-- Packagist package name confirmed as `alizne/smsapi` (same listing as v1)
+- Interim: kept Packagist name `alizne/smsapi` until rename in v2.1.0
 
 ## v2.0.0 - 2026-10-10
 
 ### Breaking
-- Packagist package name stays `alizne/smsapi` (same Packagist listing)
+- Composer package historically published as `alizne/smsapi` (renamed in v2.1.0)
 - Namespace: `Alizne\SmsApi` → `Alizeinodin\SmsApi`
 - Replaced legacy RestfulSms.com client with multi-driver architecture (sms.ir API v1 + Iranian panels + messengers)
 - Config file: `config/SMSApi.php` → `config/smsapi.php`
