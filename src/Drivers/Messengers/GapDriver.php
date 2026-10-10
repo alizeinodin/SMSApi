@@ -3,45 +3,65 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
+/**
+ * @see https://developer.gap.im/documents/fa/api/
+ */
 class GapDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'gap');
+        return 'gap';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('token', 'token');
-        $chatId = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
+        return 'gap';
+    }
 
-        $raw = $this->httpRequest('POST', 'sendMessage', [
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $chatId = $this->resolveRecipient($mobiles, $options);
+
+        if ((string) $this->config('token', '') === '') {
+            throw new SmsApiException('Gap token is not configured.');
+        }
+
+        $raw = $this->requestForm('POST', 'sendMessage', [
             'chat_id' => $chatId,
-            'type' => (string) ($options['type'] ?? 'text'),
-            'data' => $message,
-        ], isSuccessful: fn (array $d, int $s): bool => $s < 400, bodyMode: 'form');
+            'type' => (string) ($options['type'] ?? 'TEXT'),
+            'text' => $message,
+        ], static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && (
+            ($decoded['success'] ?? false) === true
+            || ($decoded['status'] ?? null) === 'success'
+            || ($decoded['ok'] ?? false) === true
+            || isset($decoded['message_id'])
+            || isset($decoded['id'])
+        ));
 
-        return $this->toMessengerResponse($raw);
+        return $this->toMessengerResponse($raw, $raw['message_id'] ?? $raw['data']['message_id'] ?? null);
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
-        return $this->buildClient(
-            (string) ($config['base_url'] ?? 'https://api.gap.im'),
-            ['token' => (string) ($config['token'] ?? '')],
-        );
-    }
-
-    protected function buildDefaultClient(): Client
-    {
-        return $this->makeClient($this->config);
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.gap.im'), '/').'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'token' => (string) ($config['token'] ?? ''),
+            ],
+        ]);
     }
 }

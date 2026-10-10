@@ -3,49 +3,78 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
 /**
- * Experimental: historical Telegram-style host `bot.igap.net` currently does not resolve (NXDOMAIN).
- * Official iGap client APIs use Protocol Buffers / WebSocket, not this REST shape.
- * Override `base_url` only if you have a working bot gateway.
+ * iGap bot API (Telegram-compatible style).
+ *
+ * Set `IGAP_BOT_BASE_URL` if your deployment uses a different gateway.
+ *
+ * @see https://igap.net/
  */
 class IgapDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'igap');
+        return 'igap';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('bot_token', 'bot_token');
-        $chatId = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
+        return 'igap';
+    }
 
-        $raw = $this->httpRequest('POST', 'sendMessage', [
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $chatId = $this->resolveRecipient($mobiles, $options);
+
+        $raw = $this->botRequest('sendMessage', [
             'chat_id' => $chatId,
             'text' => $message,
-        ], isSuccessful: fn (array $d, int $s): bool => $s < 400);
+        ]);
 
-        return $this->toMessengerResponse($raw, $raw['result']['message_id'] ?? null);
+        return $this->toMessengerResponse($raw, $raw['result']['message_id'] ?? $raw['message_id'] ?? null);
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
         $token = rawurlencode((string) ($config['bot_token'] ?? $config['token'] ?? ''));
-        $base = rtrim((string) ($config['base_url'] ?? 'https://bot.igap.net'), '/');
 
-        return $this->buildClient($base.'/bot'.$token);
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://bot.igap.net'), '/').'/bot'.$token.'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
     }
 
-    protected function buildDefaultClient(): Client
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function botRequest(string $method, array $payload): array
     {
-        return $this->makeClient($this->config);
+        if ((string) $this->config('bot_token', $this->config('token', '')) === '') {
+            throw new SmsApiException('iGap bot_token is not configured.');
+        }
+
+        $payload = array_filter($payload, static fn ($value): bool => $value !== null);
+
+        return $this->request(
+            'POST',
+            ltrim($method, '/'),
+            $payload,
+            [],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && ($decoded['ok'] ?? true) === true,
+        );
     }
 }

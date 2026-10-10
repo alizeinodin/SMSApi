@@ -4,8 +4,8 @@ namespace Alizeinodin\SmsApi\Drivers;
 
 class MelipayamakDriver extends PayamakPanelDriver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'melipayamak');
+        return 'melipayamak';
     }
 }

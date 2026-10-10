@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * @see https://payamito.com/webservice/
+ */
 class PayamitoDriver extends PayamakPanelDriver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'payamito');
+        return 'payamito';
     }
 }

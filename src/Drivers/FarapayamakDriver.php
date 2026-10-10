@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * @see https://docs.farapayamak.ir/
+ */
 class FarapayamakDriver extends PayamakPanelDriver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'farapayamak');
+        return 'farapayamak';
     }
 }

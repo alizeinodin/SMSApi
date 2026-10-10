@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * Bahman Payam / بهمن پیام — Payamak Panel API.
+ */
 class BahmanpayamDriver extends PayamakPanelDriver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'bahmanpayam');
+        return 'bahmanpayam';
     }
 }

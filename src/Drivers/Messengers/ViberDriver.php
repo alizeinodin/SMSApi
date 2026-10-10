@@ -3,49 +3,69 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
-/** @see https://developers.viber.com/docs/api/rest-bot-api/ */
+/**
+ * @see https://developers.viber.com/docs/api/rest-bot-api/
+ */
 class ViberDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'viber');
+        return 'viber';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('auth_token', 'auth_token');
-        $to = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
+        return 'viber';
+    }
 
-        $raw = $this->httpRequest('POST', 'send_message', [
-            'receiver' => $to,
-            'type' => 'text',
-            'text' => $message,
-            'sender' => [
-                'name' => (string) ($options['sender_name'] ?? $this->config('sender_name', 'Bot')),
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $receiver = $this->resolveRecipient($mobiles, $options);
+
+        if ((string) $this->config('auth_token', '') === '') {
+            throw new SmsApiException('Viber auth_token is not configured.');
+        }
+
+        $raw = $this->request(
+            'POST',
+            'send_message',
+            [
+                'receiver' => $receiver,
+                'type' => 'text',
+                'text' => $message,
+                'sender' => [
+                    'name' => (string) ($options['sender_name'] ?? $this->config('sender_name', 'Bot')),
+                ],
             ],
-        ], isSuccessful: fn (array $d): bool => (int) ($d['status'] ?? 1) === 0);
-
-        return $this->toMessengerResponse($raw, $raw['message_token'] ?? null, (int) ($raw['status'] ?? 1) === 0);
-    }
-
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
-    {
-        return $this->buildClient(
-            (string) ($config['base_url'] ?? 'https://chatapi.viber.com/pa'),
-            ['X-Viber-Auth-Token' => (string) ($config['auth_token'] ?? '')],
+            [],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && (int) ($decoded['status'] ?? 1) === 0,
         );
+
+        return $this->toMessengerResponse($raw, $raw['message_token'] ?? null);
     }
 
-    protected function buildDefaultClient(): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
-        return $this->makeClient($this->config);
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://chatapi.viber.com/pa'), '/').'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-Viber-Auth-Token' => (string) ($config['auth_token'] ?? ''),
+            ],
+        ]);
     }
 }

@@ -3,47 +3,79 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
-/** @see https://developers.line.biz/en/reference/messaging-api/ */
+/**
+ * @see https://developers.line.biz/en/docs/messaging-api/
+ */
 class LineDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'line');
+        return 'line';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('channel_access_token', 'channel_access_token');
-        $to = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
-
-        $messages = $options['messages'] ?? [['type' => 'text', 'text' => $message]];
-
-        $raw = $this->httpRequest('POST', 'message/push', [
-            'to' => $to,
-            'messages' => $messages,
-        ], isSuccessful: fn (array $d, int $s): bool => $s < 400);
-
-        return $this->toMessengerResponse($raw);
+        return 'line';
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
     {
-        return $this->buildClient(
-            (string) ($config['base_url'] ?? 'https://api.line.me/v2/bot'),
-            ['Authorization' => 'Bearer '.(string) ($config['channel_access_token'] ?? '')],
-        );
+        $to = $this->resolveRecipient($mobiles, $options);
+
+        if ((string) $this->config('channel_access_token', '') === '') {
+            throw new SmsApiException('LINE channel_access_token is not configured.');
+        }
+
+        try {
+            $response = $this->client->request('POST', 'message/push', [
+                'json' => [
+                    'to' => $to,
+                    'messages' => [
+                        ['type' => 'text', 'text' => $message],
+                    ],
+                ],
+            ]);
+        } catch (GuzzleException $e) {
+            throw new SmsApiException('LINE request failed: '.$e->getMessage(), (int) $e->getCode(), previous: $e);
+        }
+
+        $body = (string) $response->getBody();
+        $decoded = $body !== '' ? json_decode($body, true) : [];
+
+        if ($response->getStatusCode() >= 400 || (is_array($decoded) && isset($decoded['message']))) {
+            throw new SmsApiException(
+                is_array($decoded) ? (string) ($decoded['message'] ?? 'LINE error') : 'LINE error',
+                $response->getStatusCode(),
+                is_array($decoded) ? $decoded : ['raw' => $body],
+            );
+        }
+
+        return $this->toMessengerResponse(is_array($decoded) ? $decoded : [], null);
     }
 
-    protected function buildDefaultClient(): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
-        return $this->makeClient($this->config);
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.line.me/v2/bot'), '/').'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer '.(string) ($config['channel_access_token'] ?? ''),
+            ],
+        ]);
     }
 }

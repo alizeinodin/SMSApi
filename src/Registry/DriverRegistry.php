@@ -4,6 +4,7 @@ namespace Alizeinodin\SmsApi\Registry;
 
 use Alizeinodin\SmsApi\Contracts\MessageDriver;
 use Alizeinodin\SmsApi\Drivers\AmootDriver;
+use Alizeinodin\SmsApi\Drivers\ArrayDriver;
 use Alizeinodin\SmsApi\Drivers\AvanakDriver;
 use Alizeinodin\SmsApi\Drivers\BahmanpayamDriver;
 use Alizeinodin\SmsApi\Drivers\BehinpayamDriver;
@@ -13,6 +14,7 @@ use Alizeinodin\SmsApi\Drivers\GhasedakDriver;
 use Alizeinodin\SmsApi\Drivers\IppanelDriver;
 use Alizeinodin\SmsApi\Drivers\KavenegarDriver;
 use Alizeinodin\SmsApi\Drivers\LimosmsDriver;
+use Alizeinodin\SmsApi\Drivers\LogTransport;
 use Alizeinodin\SmsApi\Drivers\MagfaDriver;
 use Alizeinodin\SmsApi\Drivers\MedianaDriver;
 use Alizeinodin\SmsApi\Drivers\MelipayamakDriver;
@@ -35,8 +37,10 @@ use Alizeinodin\SmsApi\Drivers\PayamresanDriver;
 use Alizeinodin\SmsApi\Drivers\RastinsmsDriver;
 use Alizeinodin\SmsApi\Drivers\SmsIrDriver;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
-use InvalidArgumentException;
 
+/**
+ * Maps transport keys to driver classes — extend via register() in a service provider.
+ */
 final class DriverRegistry
 {
     /** @var array<string, class-string<MessageDriver>> */
@@ -44,22 +48,22 @@ final class DriverRegistry
         'smsir' => SmsIrDriver::class,
         'kavenegar' => KavenegarDriver::class,
         'ghasedak' => GhasedakDriver::class,
-        'farazsms' => FarazsmsDriver::class,
-        'ippanel' => IppanelDriver::class,
-        'magfa' => MagfaDriver::class,
-        'niksms' => NiksmsDriver::class,
-        'mediana' => MedianaDriver::class,
-        'limosms' => LimosmsDriver::class,
         'melipayamak' => MelipayamakDriver::class,
         'farapayamak' => FarapayamakDriver::class,
         'payamito' => PayamitoDriver::class,
         'payamaknovin' => PayamaknovinDriver::class,
         'bahmanpayam' => BahmanpayamDriver::class,
-        'amoot' => AmootDriver::class,
         'payamresan' => PayamresanDriver::class,
         'behinpayam' => BehinpayamDriver::class,
         'rastinsms' => RastinsmsDriver::class,
+        'farazsms' => FarazsmsDriver::class,
+        'niksms' => NiksmsDriver::class,
+        'magfa' => MagfaDriver::class,
         'avanak' => AvanakDriver::class,
+        'amoot' => AmootDriver::class,
+        'ippanel' => IppanelDriver::class,
+        'limosms' => LimosmsDriver::class,
+        'mediana' => MedianaDriver::class,
         'telegram' => TelegramDriver::class,
         'whatsapp' => WhatsAppDriver::class,
         'bale' => BaleDriver::class,
@@ -72,22 +76,32 @@ final class DriverRegistry
         'line' => LineDriver::class,
         'discord' => DiscordDriver::class,
         'slack' => SlackDriver::class,
+        'log' => LogTransport::class,
+        'array' => ArrayDriver::class,
     ];
 
     /**
      * @param  array<string, mixed>  $config
+     *
+     * @throws SmsApiException
      */
-    public static function make(string $type, array $config = []): MessageDriver
+    public static function make(string $type, array $config): MessageDriver
     {
         $class = self::$map[$type] ?? null;
 
-        if ($class === null) {
-            throw new InvalidArgumentException(sprintf('Unknown SMS driver [%s].', $type));
+        if ($class === null || ! is_subclass_of($class, MessageDriver::class)) {
+            throw new SmsApiException("SMS transport [{$type}] is not registered.");
         }
 
-        $config = array_merge(['driver' => $type, 'name' => $type], $config);
-
         return new $class($config);
+    }
+
+    /**
+     * @param  class-string<MessageDriver>  $class
+     */
+    public static function register(string $type, string $class): void
+    {
+        self::$map[$type] = $class;
     }
 
     /**
@@ -101,17 +115,5 @@ final class DriverRegistry
     public static function has(string $type): bool
     {
         return isset(self::$map[$type]);
-    }
-
-    /**
-     * @param  class-string<MessageDriver>  $class
-     */
-    public static function extend(string $type, string $class): void
-    {
-        if (! is_subclass_of($class, MessageDriver::class)) {
-            throw new SmsApiException(sprintf('%s must implement MessageDriver.', $class));
-        }
-
-        self::$map[$type] = $class;
     }
 }

@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * Amoot / آموت — Payamak Panel compatible SMS API.
+ */
 class AmootDriver extends PayamakPanelDriver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'amoot');
+        return 'amoot';
     }
 }

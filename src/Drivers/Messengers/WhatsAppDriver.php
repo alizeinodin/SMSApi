@@ -3,127 +3,101 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
+use Alizeinodin\SmsApi\Support\PhoneNumber;
 use GuzzleHttp\Client;
 
-/** @see https://developers.facebook.com/docs/whatsapp/cloud-api */
+/**
+ * Meta WhatsApp Cloud API driver.
+ *
+ * @see https://developers.facebook.com/docs/whatsapp/cloud-api
+ */
 class WhatsAppDriver extends AbstractMessengerDriver
 {
+    /**
+     * @param  array<string, mixed>  $config
+     */
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'whatsapp');
+        return 'whatsapp';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('access_token', 'access_token');
-        $this->ensureConfigured('phone_number_id', 'phone_number_id');
-        $to = $this->toWhatsAppDigits(is_array($recipients) ? ($recipients[0] ?? '') : $recipients);
-        $phoneNumberId = (string) ($options['phone_number_id'] ?? $this->config('phone_number_id'));
+        return 'whatsapp';
+    }
 
-        $raw = $this->httpRequest('POST', $phoneNumberId.'/messages', [
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $to = $this->normalizeWhatsAppRecipient($this->resolveRecipient($mobiles, $options));
+        $phoneNumberId = (string) ($options['phone_number_id'] ?? $this->config('phone_number_id', ''));
+
+        if ($phoneNumberId === '') {
+            throw new SmsApiException('WhatsApp phone_number_id is required in config or options.');
+        }
+
+        $raw = $this->whatsappRequest($phoneNumberId, [
             'messaging_product' => 'whatsapp',
-            'recipient_type' => 'individual',
             'to' => $to,
             'type' => 'text',
             'text' => ['body' => $message],
-        ], isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['messages']));
+        ]);
 
-        return $this->toMessengerResponse($raw, $raw['messages'][0]['id'] ?? null);
+        return new SendResult(
+            success: isset($raw['messages'][0]['id']),
+            message: 'OK',
+            data: ['message_id' => $raw['messages'][0]['id'] ?? null],
+            driver: $this->getName(),
+            raw: $raw,
+            statusCode: 200,
+        );
     }
 
     /**
-     * Send an approved WhatsApp message template (required for most outbound Business traffic).
-     *
-     * @param  array<string, mixed>  $parameters  Body variables (list or map) OR pass full `components` via $options
-     * @param  array<string, mixed>  $options  language (default en_US), components, phone_number_id
+     * @param  array<string, mixed>  $config
      */
-    public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
-    {
-        $this->ensureConfigured('access_token', 'access_token');
-        $this->ensureConfigured('phone_number_id', 'phone_number_id');
-        $to = $this->toWhatsAppDigits($mobile);
-        $phoneNumberId = (string) ($options['phone_number_id'] ?? $this->config('phone_number_id'));
-        $language = (string) ($options['language'] ?? $this->config('template_language', 'en_US'));
-
-        $template = [
-            'name' => (string) $templateId,
-            'language' => ['code' => $language],
-        ];
-
-        if (isset($options['components']) && is_array($options['components'])) {
-            $template['components'] = $options['components'];
-        } elseif ($parameters !== []) {
-            $template['components'] = [$this->buildBodyComponent($parameters)];
-        }
-
-        $raw = $this->httpRequest('POST', $phoneNumberId.'/messages', [
-            'messaging_product' => 'whatsapp',
-            'recipient_type' => 'individual',
-            'to' => $to,
-            'type' => 'template',
-            'template' => $template,
-        ], isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['messages']));
-
-        return $this->toMessengerResponse($raw, $raw['messages'][0]['id'] ?? null);
-    }
-
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    private static function makeClient(array $config): Client
     {
         $version = (string) ($config['api_version'] ?? 'v21.0');
-        $base = rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/').'/'.$version;
 
-        return $this->buildClient($base, [
-            'Authorization' => 'Bearer '.(string) ($config['access_token'] ?? ''),
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/').'/'.$version.'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer '.(string) ($config['access_token'] ?? ''),
+            ],
         ]);
     }
 
-    protected function buildDefaultClient(): Client
-    {
-        return $this->makeClient($this->config);
-    }
-
-    protected function toWhatsAppDigits(string $to): string
-    {
-        $digits = preg_replace('/\D+/', '', $to) ?? $to;
-        if (str_starts_with($digits, '0') && strlen($digits) === 11) {
-            $digits = '98'.substr($digits, 1);
-        }
-
-        return $digits;
-    }
-
     /**
-     * @param  array<string|int, mixed>  $parameters
-     * @return array{type: string, parameters: list<array<string, mixed>>}
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
      */
-    protected function buildBodyComponent(array $parameters): array
+    private function whatsappRequest(string $phoneNumberId, array $payload): array
     {
-        $out = [];
-        $isList = array_is_list($parameters);
-
-        foreach ($parameters as $key => $value) {
-            if (is_array($value) && isset($value['type'])) {
-                $out[] = $value;
-
-                continue;
-            }
-
-            $text = is_array($value) ? (string) ($value['value'] ?? $value['text'] ?? '') : (string) $value;
-            $param = ['type' => 'text', 'text' => $text];
-
-            if (! $isList && is_string($key) && $key !== '') {
-                $param['parameter_name'] = $key;
-            }
-
-            $out[] = $param;
+        if ((string) $this->config('access_token', '') === '') {
+            throw new SmsApiException('WhatsApp access_token is not configured.');
         }
 
-        return ['type' => 'body', 'parameters' => $out];
+        return $this->request(
+            'POST',
+            $phoneNumberId.'/messages',
+            $payload,
+            [],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && isset($decoded['messages']),
+        );
+    }
+
+    private function normalizeWhatsAppRecipient(string $recipient): string
+    {
+        return PhoneNumber::normalize($recipient, ['format' => 'digits', 'country_code' => '98']);
     }
 }

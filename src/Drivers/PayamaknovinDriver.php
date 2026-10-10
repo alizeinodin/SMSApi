@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * Payamak Novin / نوین پیامک — Payamak Panel API.
+ */
 class PayamaknovinDriver extends PayamakPanelDriver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'payamaknovin');
+        return 'payamaknovin';
     }
 }

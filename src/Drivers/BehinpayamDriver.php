@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * @see https://behinpayam.com/sms-web-service/
+ */
 class BehinpayamDriver extends SmsWebserviceV3Driver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'behinpayam');
+        return 'behinpayam';
     }
 }

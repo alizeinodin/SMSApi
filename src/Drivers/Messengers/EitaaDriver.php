@@ -3,45 +3,66 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
-/** @see https://eitaayar.ir/docs */
+/**
+ * @see https://developer.eitaa.com/docs/Develop/SendMassage
+ */
 class EitaaDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'eitaa');
+        return 'eitaa';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
+        return 'eitaa';
+    }
+
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $chatId = $this->resolveRecipient($mobiles, $options);
         $token = (string) $this->config('token', $this->config('bot_token', ''));
+
         if ($token === '') {
-            $this->ensureConfigured('token', 'token');
+            throw new SmsApiException('Eitaa token is not configured.');
         }
-        $chatId = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
 
-        $raw = $this->httpRequest('POST', 'api/'.$token.'/sendMessage', [
-            'chat_id' => $chatId,
-            'text' => $message,
-        ], isSuccessful: fn (array $d): bool => ($d['ok'] ?? false) === true);
+        $raw = $this->request(
+            'POST',
+            'api/app/sendMessage',
+            [
+                'token' => $token,
+                'chat_id' => is_numeric($chatId) ? (int) $chatId : $chatId,
+                'text' => $message,
+            ],
+            [],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && ! isset($decoded['error']),
+        );
 
-        return $this->toMessengerResponse($raw, $raw['result']['message_id'] ?? null, ($raw['ok'] ?? false) === true);
+        return $this->toMessengerResponse($raw, $raw['result']['message_id'] ?? $raw['message_id'] ?? null);
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
-        return $this->buildClient((string) ($config['base_url'] ?? 'https://eitaayar.ir'));
-    }
-
-    protected function buildDefaultClient(): Client
-    {
-        return $this->makeClient($this->config);
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://eitaayar.ir'), '/').'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ],
+        ]);
     }
 }
