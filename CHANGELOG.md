@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI matrix: allow `laravel/pint` on PHP 8.1/8.2 and do not block installs of older Laravel majors on Packagist advisories
 - PHPUnit 12 readiness: replace `@dataProvider` doc-comments with attributes
 - Tests force SQLite `:memory:` so Laravel 10 CI cells do not attempt MySQL
+- Raise PHPUnit (`^10.5`) / Testbench (`^8.22`) floors so prefer-lowest CI accepts current `phpunit.xml`
 
 ## [2.0.0] - 2026-09-12
 
