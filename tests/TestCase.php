@@ -22,6 +22,15 @@ abstract class TestCase extends BaseTestCase
 
     protected function defineEnvironment($app): void
     {
+        // Force in-memory SQLite so Laravel 10 (default mysql) matches 11/12 CI cells.
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ]);
+
         $app['config']->set('smsapi.default', 'array');
         $app['config']->set('smsapi.logging.enabled', false);
         $app['config']->set('smsapi.resilience.circuit_breaker.enabled', false);
