@@ -1,5 +1,5 @@
 {
-    "name": "alizeinodin/smsapi",
+    "name": "alizne/smsapi",
     "description": "Laravel SMS package for Iranian panels (sms.ir, Kavenegar, Ghasedak, …) with sandbox integration tests",
     "keywords": ["laravel", "sms", "sms.ir", "kavenegar", "otp", "sandbox"],
     "license": "MIT",
@@ -9,9 +9,6 @@
             "email": "alizeinodin79@gmail.com"
         }
     ],
-    "replace": {
-        "alizne/smsapi": "self.version"
-    },
     "require": {
         "php": "^8.1",
         "ext-curl": "*",
