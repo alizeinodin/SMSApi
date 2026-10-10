@@ -110,6 +110,17 @@ abstract class SmsWebserviceV3Driver extends AbstractDriver
         return $this->getCredit();
     }
 
+    /**
+     * StatusById takes a batch of message ids and answers with one delivery record per id.
+     */
+    public function getMessage(int $messageId): SendResult
+    {
+        return $this->toV3Response($this->v3Request('POST', 'StatusById', [
+            'ApiKey' => $this->apiKey(),
+            'Ids' => [$messageId],
+        ]));
+    }
+
     public function cancelScheduled(string $packId): SendResult
     {
         throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
@@ -155,11 +166,13 @@ abstract class SmsWebserviceV3Driver extends AbstractDriver
             strtoupper($method) === 'GET' ? $payload : [],
             static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400
                 && (
-                    ($decoded['Success'] ?? null) === true
-                    || ($decoded['success'] ?? null) === true
-                    || isset($decoded['Result'])
-                    || isset($decoded['result'])
-                    || isset($decoded['id'])
+                    array_key_exists('Success', $decoded)
+                        ? $decoded['Success'] === true
+                        : (
+                            array_key_exists('success', $decoded)
+                                ? $decoded['success'] === true
+                                : (isset($decoded['Result']) || isset($decoded['result']) || isset($decoded['id']))
+                        )
                 ),
         );
     }
