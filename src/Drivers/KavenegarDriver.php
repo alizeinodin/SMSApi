@@ -4,8 +4,8 @@ namespace Alizeinodin\SmsApi\Drivers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
-use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * @see https://kavenegar.com/rest.html
@@ -53,30 +53,33 @@ class KavenegarDriver extends AbstractDriver
 
     public function bulk(string $message, array $mobiles, array $options = []): SendResult
     {
-        $mobiles = $this->normalizeMobiles($mobiles);
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+        $sender = $this->resolveSender($options);
 
         return $this->toKavenegarResponse($this->kavenegarRequest('POST', 'sms/sendarray.json', [
-            'receptor' => json_encode(array_values($mobiles), JSON_UNESCAPED_UNICODE),
+            'receptor' => json_encode($mobiles, JSON_UNESCAPED_UNICODE),
             'message' => json_encode(array_fill(0, count($mobiles), $message), JSON_UNESCAPED_UNICODE),
-            'sender' => $this->resolveSender($options),
+            'sender' => json_encode(array_fill(0, count($mobiles), $sender), JSON_UNESCAPED_UNICODE),
         ]));
     }
 
     public function sendMapped(array $messages, array $mobiles, array $options = []): SendResult
     {
-        $mobiles = $this->normalizeMobiles($mobiles);
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+        $messages = array_values($messages);
+        $sender = $this->resolveSender($options);
 
         return $this->toKavenegarResponse($this->kavenegarRequest('POST', 'sms/sendarray.json', [
-            'receptor' => json_encode(array_values($mobiles), JSON_UNESCAPED_UNICODE),
-            'message' => json_encode(array_values($messages), JSON_UNESCAPED_UNICODE),
-            'sender' => $this->resolveSender($options),
+            'receptor' => json_encode($mobiles, JSON_UNESCAPED_UNICODE),
+            'message' => json_encode($messages, JSON_UNESCAPED_UNICODE),
+            'sender' => json_encode(array_fill(0, count($mobiles), $sender), JSON_UNESCAPED_UNICODE),
         ]));
     }
 
     public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
         $query = [
-            'receptor' => $mobile,
+            'receptor' => $this->normalizeMobiles($mobile)[0] ?? $mobile,
             'template' => (string) $templateId,
         ];
 
@@ -108,7 +111,86 @@ class KavenegarDriver extends AbstractDriver
 
     public function cancelScheduled(string $packId): SendResult
     {
-        throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
+        return $this->toKavenegarResponse($this->kavenegarRequest('GET', 'sms/cancel.json', [
+            'messageid' => $packId,
+        ]), list: true);
+    }
+
+    public function getMessage(int $messageId): SendResult
+    {
+        return $this->toKavenegarResponse($this->kavenegarRequest('GET', 'sms/select.json', [
+            'messageid' => $messageId,
+        ]));
+    }
+
+    public function getLiveSends(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->toKavenegarResponse($this->kavenegarRequest('GET', 'sms/latestoutbox.json', [
+            'pagesize' => $pageSize,
+        ]), list: true);
+    }
+
+    /**
+     * Kavenegar only keeps one day per query, so a null range falls back to the last 24 hours.
+     */
+    public function getArchivedSends(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        ?int $fromDate = null,
+        ?int $toDate = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->toKavenegarResponse($this->kavenegarRequest('GET', 'sms/selectoutbox.json', array_filter([
+            'startdate' => $fromDate ?? time() - 86400,
+            'enddate' => $toDate,
+        ], fn ($value) => $value !== null)), list: true);
+    }
+
+    /**
+     * The receive endpoint always returns the newest batch, so $count is not sent.
+     */
+    public function getLatestReceived(int $count = 100): SendResult
+    {
+        return $this->toKavenegarResponse($this->kavenegarRequest('GET', 'sms/receive.json', [
+            'linenumber' => $this->resolveSender([]),
+            'isread' => 0,
+        ]), list: true);
+    }
+
+    public function getLiveReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->toKavenegarResponse($this->kavenegarRequest('GET', 'sms/inboxpaged.json', [
+            'linenumber' => $this->resolveSender([]),
+            'isread' => 0,
+            'pagenumber' => $pageNumber,
+            'pagesize' => $pageSize,
+        ]), list: true);
+    }
+
+    public function getArchivedReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        ?int $fromDate = null,
+        ?int $toDate = null,
+    ): SendResult {
+        return $this->toKavenegarResponse($this->kavenegarRequest('GET', 'sms/inboxpaged.json', array_filter([
+            'linenumber' => $this->resolveSender([]),
+            'isread' => 1,
+            'pagenumber' => $pageNumber,
+            'pagesize' => $pageSize,
+            'startdate' => $fromDate,
+            'enddate' => $toDate,
+        ], fn ($value) => $value !== null)), list: true);
     }
 
     /**
@@ -129,6 +211,8 @@ class KavenegarDriver extends AbstractDriver
     }
 
     /**
+     * GET uses query string; POST (sendarray) uses form-urlencoded fields.
+     *
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
@@ -138,30 +222,69 @@ class KavenegarDriver extends AbstractDriver
             throw new SmsApiException('Kavenegar api_key is not configured.');
         }
 
-        $query = strtoupper($method) === 'GET' ? $payload : [];
-        $body = strtoupper($method) === 'GET' ? [] : $payload;
+        $method = strtoupper($method);
+        $options = [];
 
-        return $this->request(
-            $method,
-            ltrim($uri, '/'),
-            $body,
-            $query,
-            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400
-                && (int) ($decoded['return']['status'] ?? 0) === 200,
-        );
+        if ($method === 'GET') {
+            $options['query'] = $payload;
+        } elseif ($payload !== []) {
+            $options['form_params'] = $payload;
+        }
+
+        try {
+            $response = $this->client->request($method, ltrim($uri, '/'), $options);
+        } catch (GuzzleException $e) {
+            throw new SmsApiException(
+                sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
+                (int) $e->getCode(),
+                previous: $e,
+            );
+        }
+
+        $body = (string) $response->getBody();
+        $decoded = json_decode($body, true);
+
+        if (! is_array($decoded)) {
+            throw new SmsApiException(
+                sprintf('Invalid JSON response from [%s].', $this->getName()),
+                $response->getStatusCode(),
+                ['raw' => $body],
+            );
+        }
+
+        $status = (int) ($decoded['return']['status'] ?? 0);
+
+        if ($response->getStatusCode() >= 400 || $status !== 200) {
+            throw new SmsApiException(
+                (string) ($decoded['return']['message'] ?? sprintf('Unknown error from [%s].', $this->getName())),
+                $status !== 0 ? $status : $response->getStatusCode(),
+                $decoded,
+            );
+        }
+
+        return $decoded;
     }
 
     /**
      * @param  array<string, mixed>  $raw
      */
-    private function toKavenegarResponse(array $raw): SendResult
+    private function toKavenegarResponse(array $raw, bool $list = false): SendResult
     {
-        $entry = $raw['return']['entries'][0] ?? $raw['return']['entry'] ?? $raw['entries'][0] ?? null;
+        $entries = $raw['return']['entries'] ?? $raw['entries'] ?? $raw['return']['entry'] ?? null;
+
+        if ($list) {
+            $data = is_array($entries)
+                ? (array_is_list($entries) ? $entries : [$entries])
+                : [];
+        } else {
+            $entry = is_array($entries) && array_is_list($entries) ? ($entries[0] ?? null) : $entries;
+            $data = is_array($entry) ? $entry : ($raw['return'] ?? null);
+        }
 
         return new SendResult(
             success: (int) ($raw['return']['status'] ?? 0) === 200,
             message: (string) ($raw['return']['message'] ?? 'OK'),
-            data: is_array($entry) ? $entry : ($raw['return'] ?? null),
+            data: $data,
             driver: $this->getName(),
             raw: $raw,
             statusCode: (int) ($raw['return']['status'] ?? 200),

@@ -116,8 +116,10 @@ class MedianaDriver extends AbstractDriver
      */
     private function toMedianaResponse(array $raw): SendResult
     {
+        $success = ($raw['success'] ?? $raw['Success'] ?? true) !== false;
+
         return new SendResult(
-            success: true,
+            success: $success,
             message: (string) ($raw['message'] ?? 'OK'),
             data: $raw['data'] ?? $raw,
             driver: $this->getName(),

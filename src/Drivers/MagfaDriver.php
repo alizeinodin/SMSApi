@@ -36,11 +36,12 @@ class MagfaDriver extends AbstractDriver
 
     public function send(string|array $mobiles, string $message, array $options = []): SendResult
     {
-        $mobiles = $this->normalizeMobiles($mobiles);
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+        $sender = $this->resolveSender($options);
 
         return $this->toMagfaResponse($this->magfaRequest('POST', 'send', [
-            'senders' => [$this->resolveSender($options)],
-            'recipients' => array_values($mobiles),
+            'senders' => array_fill(0, count($mobiles), $sender),
+            'recipients' => $mobiles,
             'messages' => array_fill(0, count($mobiles), $message),
         ]));
     }
@@ -52,11 +53,12 @@ class MagfaDriver extends AbstractDriver
 
     public function sendMapped(array $messages, array $mobiles, array $options = []): SendResult
     {
-        $mobiles = $this->normalizeMobiles($mobiles);
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+        $sender = $this->resolveSender($options);
 
         return $this->toMagfaResponse($this->magfaRequest('POST', 'send', [
-            'senders' => array_fill(0, count($mobiles), $this->resolveSender($options)),
-            'recipients' => array_values($mobiles),
+            'senders' => array_fill(0, count($mobiles), $sender),
+            'recipients' => $mobiles,
             'messages' => array_values($messages),
         ]));
     }
@@ -68,7 +70,45 @@ class MagfaDriver extends AbstractDriver
 
     public function getCredit(): SendResult
     {
-        return $this->toMagfaResponse($this->magfaRequest('GET', 'balance'), credit: true);
+        $raw = $this->magfaRequest('GET', 'balance');
+
+        return $this->toMagfaResponse($raw, data: ['balance' => $raw['balance'] ?? $raw['credit'] ?? null]);
+    }
+
+    public function getMessage(int $messageId): SendResult
+    {
+        $raw = $this->magfaRequest('GET', "statuses/{$messageId}");
+
+        return $this->toMagfaResponse($raw, data: $raw['dlrs'][0] ?? []);
+    }
+
+    /**
+     * Magfa pops the inbox: each call returns (and clears) up to $count received messages.
+     */
+    public function getLatestReceived(int $count = 100): SendResult
+    {
+        $raw = $this->magfaRequest('GET', "messages/{$count}");
+
+        return $this->toMagfaResponse($raw, data: $raw['messages'] ?? []);
+    }
+
+    public function getLiveReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->getLatestReceived($pageSize);
+    }
+
+    public function getArchivedReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        ?int $fromDate = null,
+        ?int $toDate = null,
+    ): SendResult {
+        return $this->getLatestReceived($pageSize);
     }
 
     public function cancelScheduled(string $packId): SendResult
@@ -121,11 +161,9 @@ class MagfaDriver extends AbstractDriver
     /**
      * @param  array<string, mixed>  $raw
      */
-    private function toMagfaResponse(array $raw, bool $credit = false): SendResult
+    private function toMagfaResponse(array $raw, mixed $data = null): SendResult
     {
-        $data = $credit
-            ? ['balance' => $raw['balance'] ?? $raw['credit'] ?? null]
-            : ($raw['messages'][0] ?? $raw);
+        $data ??= $raw['messages'][0] ?? $raw;
 
         return new SendResult(
             success: (int) ($raw['status'] ?? 0) === 0,

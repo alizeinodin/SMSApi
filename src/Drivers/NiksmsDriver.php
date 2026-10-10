@@ -64,6 +64,22 @@ class NiksmsDriver extends AbstractDriver
         ]));
     }
 
+    public function sendMapped(array $messages, array $mobiles, array $options = []): SendResult
+    {
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+        $messages = array_values(array_map('strval', $messages));
+
+        if (count($messages) !== count($mobiles)) {
+            throw new SmsApiException('Niksms peer-to-peer send needs one message per recipient.');
+        }
+
+        return $this->toNiksmsResponse($this->niksmsRequest('POST', 'send/ptp', [
+            'message' => json_encode($messages, JSON_UNESCAPED_UNICODE),
+            'recipients' => json_encode($mobiles, JSON_UNESCAPED_UNICODE),
+            'senderNumber' => $this->resolveSenderLine($options, 'senderNumber/line_number'),
+        ]));
+    }
+
     public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
         throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
@@ -71,7 +87,14 @@ class NiksmsDriver extends AbstractDriver
 
     public function getCredit(): SendResult
     {
-        throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
+        return $this->toNiksmsResponse($this->niksmsRequest('POST', 'GetCredit', []));
+    }
+
+    public function getMessage(int $messageId): SendResult
+    {
+        return $this->toNiksmsResponse($this->niksmsRequest('POST', 'Status', [
+            'nikIds' => (string) $messageId,
+        ]));
     }
 
     public function cancelScheduled(string $packId): SendResult
@@ -146,10 +169,11 @@ class NiksmsDriver extends AbstractDriver
      */
     private function toNiksmsResponse(array $raw): SendResult
     {
-        $status = (int) ($raw['Status'] ?? $raw['status'] ?? 1);
+        $hasStatus = array_key_exists('Status', $raw) || array_key_exists('status', $raw);
+        $status = $hasStatus ? (int) ($raw['Status'] ?? $raw['status']) : 0;
 
         return new SendResult(
-            success: $status === 1,
+            success: $hasStatus && $status === 1,
             message: (string) ($raw['Message'] ?? $raw['message'] ?? 'OK'),
             data: $raw['Data'] ?? $raw['data'] ?? $raw,
             driver: $this->getName(),
