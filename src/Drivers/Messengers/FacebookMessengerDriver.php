@@ -3,61 +3,67 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
-/** @see https://developers.facebook.com/docs/messenger-platform/send-messages */
+/**
+ * Meta Messenger Platform (Facebook Page / Instagram messaging).
+ *
+ * @see https://developers.facebook.com/docs/messenger-platform
+ */
 class FacebookMessengerDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'messenger');
+        return 'messenger';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('page_access_token', 'page_access_token');
-        $to = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
+        return 'messenger';
+    }
+
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $recipientId = $this->resolveRecipient($mobiles, $options);
         $pageId = (string) ($options['page_id'] ?? $this->config('page_id', 'me'));
-        $messagingType = (string) ($options['messaging_type'] ?? $this->config('messaging_type', 'RESPONSE'));
 
-        $payload = [
-            'recipient' => ['id' => $to],
-            'messaging_type' => $messagingType,
-            'message' => ['text' => $message],
-        ];
-
-        if (isset($options['tag']) || $this->config('tag')) {
-            $payload['tag'] = (string) ($options['tag'] ?? $this->config('tag'));
+        if ((string) $this->config('page_access_token', '') === '') {
+            throw new SmsApiException('Messenger page_access_token is not configured.');
         }
 
-        if (isset($options['notification_type'])) {
-            $payload['notification_type'] = (string) $options['notification_type'];
-        }
-
-        $raw = $this->httpRequest('POST', $pageId.'/messages', $payload, isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['message_id']));
+        $raw = $this->request(
+            'POST',
+            $pageId.'/messages',
+            [
+                'messaging_type' => (string) ($options['messaging_type'] ?? 'RESPONSE'),
+                'recipient' => ['id' => $recipientId],
+                'message' => ['text' => $message],
+            ],
+            ['access_token' => (string) $this->config('page_access_token')],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && isset($decoded['message_id']),
+        );
 
         return $this->toMessengerResponse($raw, $raw['message_id'] ?? null);
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
         $version = (string) ($config['api_version'] ?? 'v21.0');
-        $base = rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/').'/'.$version;
-        $token = (string) ($config['page_access_token'] ?? '');
 
-        return $this->buildClient($base, [
-            'Authorization' => 'Bearer '.$token,
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://graph.facebook.com'), '/').'/'.$version.'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => ['Accept' => 'application/json', 'Content-Type' => 'application/json'],
         ]);
-    }
-
-    protected function buildDefaultClient(): Client
-    {
-        return $this->makeClient($this->config);
     }
 }

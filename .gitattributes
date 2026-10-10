@@ -1,10 +1,7 @@
-/.gitattributes
 * text=auto eol=lf
 
 /.github export-ignore
 /tests export-ignore
-.phpunit.cache export-ignore
-.phpunit.result.cache export-ignore
-.env.sandbox export-ignore
-.env.sandbox.example export-ignore
-phpunit.xml export-ignore
+/phpunit.xml export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore

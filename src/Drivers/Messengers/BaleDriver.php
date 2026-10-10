@@ -3,45 +3,77 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
-/** Bale bot API (Telegram-compatible). @see https://docs.bale.ai */
+/**
+ * Bale messenger (بله) — Bot API compatible with Telegram-style endpoints.
+ *
+ * @see https://dev.bale.ai/
+ */
 class BaleDriver extends AbstractMessengerDriver
 {
+    /**
+     * @param  array<string, mixed>  $config
+     */
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'bale');
+        return 'bale';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('bot_token', 'bot_token');
-        $chatId = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
+        return 'bale';
+    }
 
-        $raw = $this->httpRequest('POST', 'sendMessage', [
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $chatId = $this->resolveRecipient($mobiles, $options);
+
+        $raw = $this->baleRequest('sendMessage', [
             'chat_id' => $chatId,
             'text' => $message,
-        ], isSuccessful: fn (array $d): bool => ($d['ok'] ?? false) === true);
+        ]);
 
-        return $this->toMessengerResponse($raw, $raw['result']['message_id'] ?? null, ($raw['ok'] ?? false) === true);
+        return $this->toMessengerResponse($raw, $raw['result']['message_id'] ?? null);
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
         $token = rawurlencode((string) ($config['bot_token'] ?? ''));
-        $base = rtrim((string) ($config['base_url'] ?? 'https://tapi.bale.ai'), '/');
 
-        return $this->buildClient($base.'/bot'.$token);
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://tapi.bale.ai/bot'), '/').'/'.$token.'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => ['Accept' => 'application/json'],
+        ]);
     }
 
-    protected function buildDefaultClient(): Client
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function baleRequest(string $method, array $payload): array
     {
-        return $this->makeClient($this->config);
+        if ((string) $this->config('bot_token', '') === '') {
+            throw new SmsApiException('Bale bot_token is not configured.');
+        }
+
+        return $this->request(
+            'POST',
+            ltrim($method, '/'),
+            $payload,
+            [],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && ($decoded['ok'] ?? false) === true,
+        );
     }
 }

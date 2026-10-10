@@ -2,57 +2,123 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+use Alizeinodin\SmsApi\Drivers\Concerns\HasProviderIdentity;
+use Alizeinodin\SmsApi\Drivers\Concerns\ResolvesSenderLine;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
+use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
+/**
+ * Nik SMS / نیک اس‌ام‌اس REST API v2.
+ *
+ * @see https://niksms.com/
+ */
 class NiksmsDriver extends AbstractDriver
 {
+    use HasProviderIdentity;
+    use ResolvesSenderLine;
+
+    /**
+     * @param  array<string, mixed>  $config
+     */
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function driverConfig(): array
     {
-        return (string) ($this->config['name'] ?? 'niksms');
+        return $this->config;
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultProviderName(): string
     {
-        $mobile = $this->normalizeMobiles($recipients)[0] ?? '';
+        return 'niksms';
+    }
 
-        return $this->map($this->request('POST', 'SendSms/SendOne', array_merge($this->auth(), [
-            'senderNumber' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
-            'numbers' => [$mobile],
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $mobiles = $this->normalizeMobiles($mobiles);
+
+        if (count($mobiles) === 1) {
+            return $this->toNiksmsResponse($this->niksmsRequest('POST', 'send/one', [
+                'message' => $message,
+                'recipient' => $mobiles[0],
+                'senderNumber' => $this->resolveSenderLine($options, 'senderNumber/line_number'),
+            ]));
+        }
+
+        return $this->bulk($message, $mobiles, $options);
+    }
+
+    public function bulk(string $message, array $mobiles, array $options = []): SendResult
+    {
+        $mobiles = $this->normalizeMobiles($mobiles);
+
+        return $this->toNiksmsResponse($this->niksmsRequest('POST', 'send/group', [
             'message' => $message,
-        ])));
+            'recipients' => json_encode(array_values($mobiles), JSON_UNESCAPED_UNICODE),
+            'senderNumber' => $this->resolveSenderLine($options, 'senderNumber/line_number'),
+        ]));
     }
 
-    public function bulk(string $message, array $recipients, array $options = []): SendResult
+    public function sendMapped(array $messages, array $mobiles, array $options = []): SendResult
     {
-        $mobiles = array_values($this->normalizeMobiles($recipients));
+        $mobiles = array_values($this->normalizeMobiles($mobiles));
+        $messages = array_values(array_map('strval', $messages));
 
-        return $this->map($this->request('POST', 'SendSms/SendGroupOnOneMessage', array_merge($this->auth(), [
-            'senderNumber' => $this->resolveLine(isset($options['lineNumber']) ? (string) $options['lineNumber'] : null),
-            'numbers' => $mobiles,
-            'message' => $message,
-        ])));
+        if (count($messages) !== count($mobiles)) {
+            throw new SmsApiException('Niksms peer-to-peer send needs one message per recipient.');
+        }
+
+        return $this->toNiksmsResponse($this->niksmsRequest('POST', 'send/ptp', [
+            'message' => json_encode($messages, JSON_UNESCAPED_UNICODE),
+            'recipients' => json_encode($mobiles, JSON_UNESCAPED_UNICODE),
+            'senderNumber' => $this->resolveSenderLine($options, 'senderNumber/line_number'),
+        ]));
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
-        return $this->buildClient((string) ($config['base_url'] ?? 'https://niksms.com/api/v2'));
+        throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
     }
 
-    protected function buildDefaultClient(): Client
+    public function getCredit(): SendResult
     {
-        return $this->makeClient($this->config);
+        return $this->toNiksmsResponse($this->niksmsRequest('POST', 'GetCredit', []));
     }
 
-    /** @return array{username: string, password: string} */
-    protected function auth(): array
+    public function getMessage(int $messageId): SendResult
+    {
+        return $this->toNiksmsResponse($this->niksmsRequest('POST', 'Status', [
+            'nikIds' => (string) $messageId,
+        ]));
+    }
+
+    public function cancelScheduled(string $packId): SendResult
+    {
+        throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
+    {
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://niksms.com/api/v2'), '/').'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function niksmsRequest(string $method, string $uri, array $payload): array
     {
         $username = (string) $this->config('username', '');
         $password = (string) $this->config('password', '');
@@ -61,30 +127,58 @@ class NiksmsDriver extends AbstractDriver
             throw new SmsApiException('Niksms username/password are not configured.');
         }
 
-        return compact('username', 'password');
+        $form = array_merge([
+            'username' => $username,
+            'password' => $password,
+        ], $payload);
+
+        try {
+            $response = $this->client->request($method, ltrim($uri, '/'), ['form_params' => $form]);
+        } catch (GuzzleException $e) {
+            throw new SmsApiException(
+                sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
+                (int) $e->getCode(),
+                previous: $e,
+            );
+        }
+
+        $body = (string) $response->getBody();
+        $decoded = json_decode($body, true);
+
+        if (! is_array($decoded)) {
+            throw new SmsApiException(
+                sprintf('Invalid JSON response from [%s].', $this->getName()),
+                $response->getStatusCode(),
+                ['raw' => $body],
+            );
+        }
+
+        if ($response->getStatusCode() >= 400) {
+            throw new SmsApiException(
+                (string) ($decoded['Message'] ?? 'Niksms request failed.'),
+                $response->getStatusCode(),
+                $decoded,
+            );
+        }
+
+        return $decoded;
     }
 
     /**
-     * @param  array<string, mixed>  $payload
-     * @return array<string, mixed>
+     * @param  array<string, mixed>  $raw
      */
-    protected function request(string $method, string $uri, array $payload = []): array
+    private function toNiksmsResponse(array $raw): SendResult
     {
-        return $this->httpRequest(
-            $method,
-            $uri,
-            $payload,
-            isSuccessful: fn (array $decoded): bool => (int) ($decoded['Status'] ?? 0) === 1,
-        );
-    }
+        $hasStatus = array_key_exists('Status', $raw) || array_key_exists('status', $raw);
+        $status = $hasStatus ? (int) ($raw['Status'] ?? $raw['status']) : 0;
 
-    /** @param  array<string, mixed>  $raw */
-    protected function map(array $raw): SendResult
-    {
-        return $this->toResponse(
-            $raw,
-            success: (int) ($raw['Status'] ?? 0) === 1,
-            message: (string) ($raw['Message'] ?? 'OK'),
+        return new SendResult(
+            success: $hasStatus && $status === 1,
+            message: (string) ($raw['Message'] ?? $raw['message'] ?? 'OK'),
+            data: $raw['Data'] ?? $raw['data'] ?? $raw,
+            driver: $this->getName(),
+            raw: $raw,
+            statusCode: $status,
         );
     }
 }

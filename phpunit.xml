@@ -9,13 +9,26 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
         <testsuite name="Integration">
             <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
+    <groups>
+        <exclude>
+            <group>sandbox</group>
+            <group>network</group>
+        </exclude>
+    </groups>
     <source>
         <include>
             <directory>src</directory>
         </include>
     </source>
+    <php>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+    </php>
 </phpunit>

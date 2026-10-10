@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * @see https://doc.sms-webservice.com/
+ */
 class PayamresanDriver extends SmsWebserviceV3Driver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'payamresan');
+        return 'payamresan';
     }
 }

@@ -3,50 +3,68 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
-/** @see https://discord.com/developers/docs/resources/channel#create-message */
+/**
+ * @see https://discord.com/developers/docs/resources/channel#create-message
+ */
 class DiscordDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'discord');
+        return 'discord';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('bot_token', 'bot_token');
-        $channelId = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
+        return 'discord';
+    }
 
-        $payload = array_filter([
-            'content' => $message,
-            'embeds' => $options['embeds'] ?? null,
-            'tts' => $options['tts'] ?? null,
-        ], fn ($v) => $v !== null);
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
+    {
+        $channelId = (string) ($options['channel_id'] ?? $this->resolveRecipient($mobiles, $options));
 
-        $raw = $this->httpRequest('POST', 'channels/'.$channelId.'/messages', $payload, isSuccessful: fn (array $d, int $s): bool => $s < 400 && isset($d['id']));
+        if ($channelId === '') {
+            throw new SmsApiException('Discord channel_id is required.');
+        }
+
+        if ((string) $this->config('bot_token', '') === '') {
+            throw new SmsApiException('Discord bot_token is not configured.');
+        }
+
+        $raw = $this->request(
+            'POST',
+            'channels/'.$channelId.'/messages',
+            ['content' => $message],
+            [],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && isset($decoded['id']),
+        );
 
         return $this->toMessengerResponse($raw, $raw['id'] ?? null);
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
         $version = (string) ($config['api_version'] ?? 'v10');
-        $base = rtrim((string) ($config['base_url'] ?? 'https://discord.com/api'), '/').'/'.$version;
 
-        return $this->buildClient($base, [
-            'Authorization' => 'Bot '.(string) ($config['bot_token'] ?? ''),
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://discord.com/api'), '/').'/'.$version.'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bot '.(string) ($config['bot_token'] ?? ''),
+            ],
         ]);
-    }
-
-    protected function buildDefaultClient(): Client
-    {
-        return $this->makeClient($this->config);
     }
 }

@@ -40,7 +40,7 @@ class SmsIrSandboxDriverTest extends TestCase
         $result = $driver->sendSandboxVerify('09121234567', '12345');
 
         $this->assertTrue($result->success);
-        $this->assertSame('99', $result->messageId);
+        $this->assertSame(99, $result->data['messageId'] ?? null);
         $this->assertCount(1, $history);
 
         /** @var \GuzzleHttp\Psr7\Request $request */

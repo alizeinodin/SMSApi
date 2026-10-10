@@ -3,11 +3,13 @@
 namespace Alizeinodin\SmsApi\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Confirms official API hosts are network-reachable (no credentials needed).
  */
+#[Group('network')]
 class EndpointReachabilityTest extends TestCase
 {
     /**

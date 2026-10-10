@@ -2,13 +2,17 @@
 
 namespace Alizeinodin\SmsApi\Contracts;
 
-use Alizeinodin\SmsApi\DTOs\SendResult;
-
-interface SmsDriver extends MessageDriver
-{
-    /**
-     * @param  array<string, mixed>  $parameters
-     * @param  array<string, mixed>  $options
-     */
-    public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult;
-}
+/**
+ * Full SMS driver surface returned for SMS transports.
+ *
+ * Messengers implement MessengerDriver instead — do not type-hint SmsDriver for chat bots.
+ *
+ * Prefer narrow interfaces in application code:
+ *   MessageDriver   — any sendable channel
+ *   SmsSender       — SMS outbound (send / verify / …)
+ *   MessengerDriver — chat bots
+ *   SmsWallet       — balance / lines
+ *   SmsReports      — delivery reports
+ *   SmsInbox        — inbound
+ */
+interface SmsDriver extends SmsInbox, SmsLineAware, SmsReports, SmsScheduler, SmsSender, SmsWallet {}

@@ -3,48 +3,69 @@
 namespace Alizeinodin\SmsApi\Drivers\Messengers;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use GuzzleHttp\Client;
 
-/** @see https://api.slack.com/methods/chat.postMessage */
+/**
+ * @see https://api.slack.com/methods/chat.postMessage
+ */
 class SlackDriver extends AbstractMessengerDriver
 {
     public function __construct(array $config = [], ?Client $client = null)
     {
-        parent::__construct($config, $client ?? $this->makeClient($config));
+        parent::__construct($config, $client ?? self::makeClient($config));
     }
 
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'slack');
+        return 'slack';
     }
 
-    public function send(string|array $recipients, string $message, array $options = []): SendResult
+    protected function defaultChannel(): string
     {
-        $this->ensureConfigured('bot_token', 'bot_token');
-        $channel = is_array($recipients) ? ($recipients[0] ?? '') : $recipients;
-
-        $raw = $this->httpRequest('POST', 'chat.postMessage', array_filter([
-            'channel' => $channel,
-            'text' => $message,
-            'blocks' => $options['blocks'] ?? null,
-            'thread_ts' => $options['thread_ts'] ?? null,
-            'mrkdwn' => $options['mrkdwn'] ?? null,
-        ], fn ($v) => $v !== null), isSuccessful: fn (array $d): bool => ($d['ok'] ?? false) === true);
-
-        return $this->toMessengerResponse($raw, $raw['ts'] ?? null, ($raw['ok'] ?? false) === true);
+        return 'slack';
     }
 
-    /** @param  array<string, mixed>  $config */
-    protected function makeClient(array $config): Client
+    public function send(string|array $mobiles, string $message, array $options = []): SendResult
     {
-        return $this->buildClient(
-            (string) ($config['base_url'] ?? 'https://slack.com/api'),
-            ['Authorization' => 'Bearer '.(string) ($config['bot_token'] ?? '')],
+        $channel = (string) ($options['channel'] ?? $this->resolveRecipient($mobiles, $options));
+
+        if ($channel === '') {
+            throw new SmsApiException('Slack channel id is required.');
+        }
+
+        if ((string) $this->config('bot_token', '') === '') {
+            throw new SmsApiException('Slack bot_token is not configured.');
+        }
+
+        $raw = $this->request(
+            'POST',
+            'chat.postMessage',
+            [
+                'channel' => $channel,
+                'text' => $message,
+            ],
+            [],
+            static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && ($decoded['ok'] ?? false) === true,
         );
+
+        return $this->toMessengerResponse($raw, $raw['ts'] ?? $raw['message']['ts'] ?? null);
     }
 
-    protected function buildDefaultClient(): Client
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private static function makeClient(array $config): Client
     {
-        return $this->makeClient($this->config);
+        return new Client([
+            'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://slack.com/api'), '/').'/',
+            'timeout' => (float) ($config['timeout'] ?? 30),
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json; charset=utf-8',
+                'Authorization' => 'Bearer '.(string) ($config['bot_token'] ?? ''),
+            ],
+        ]);
     }
 }

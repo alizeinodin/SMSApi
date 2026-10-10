@@ -2,10 +2,13 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
+/**
+ * Rastin SMS / راستین اس‌ام‌اس — SMS Webservice V3 compatible API.
+ */
 class RastinsmsDriver extends SmsWebserviceV3Driver
 {
-    public function getName(): string
+    protected function defaultProviderName(): string
     {
-        return (string) ($this->config['name'] ?? 'rastinsms');
+        return 'rastinsms';
     }
 }

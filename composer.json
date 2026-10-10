@@ -1,7 +1,31 @@
 {
     "name": "alizeinodin/smsapi",
-    "description": "Laravel SMS package for Iranian panels (sms.ir, Kavenegar, Ghasedak, …) with sandbox integration tests",
-    "keywords": ["laravel", "sms", "sms.ir", "kavenegar", "otp", "sandbox"],
+    "description": "Laravel SMS & messenger package for Iranian providers (sms.ir, Kavenegar, Ghasedak, Melipayamak, …) with failover, templates, OTP vault, and queues",
+    "keywords": [
+        "laravel",
+        "sms",
+        "otp",
+        "notification",
+        "failover",
+        "iran",
+        "sms.ir",
+        "smsir",
+        "kavenegar",
+        "ghasedak",
+        "melipayamak",
+        "farazsms",
+        "magfa",
+        "ippanel",
+        "niksms",
+        "mediana",
+        "avanak",
+        "telegram",
+        "whatsapp",
+        "bale",
+        "eitaa",
+        "rubika",
+        "driver"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -14,15 +38,24 @@
     },
     "require": {
         "php": "^8.1",
-        "ext-curl": "*",
-        "ext-json": "*",
         "guzzlehttp/guzzle": "^7.5",
-        "illuminate/support": "^9.0|^10.0|^11.0|^12.0"
+        "illuminate/bus": "^10.0|^11.0|^12.0",
+        "illuminate/cache": "^10.0|^11.0|^12.0",
+        "illuminate/database": "^10.0|^11.0|^12.0",
+        "illuminate/mail": "^10.0|^11.0|^12.0",
+        "illuminate/notifications": "^10.0|^11.0|^12.0",
+        "illuminate/queue": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0",
+        "illuminate/view": "^10.0|^11.0|^12.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
-        "phpunit/phpunit": "^9.6|^10.0|^11.0",
+        "orchestra/testbench": "^8.22|^9.0|^10.0",
+        "phpunit/phpunit": "^10.5|^11.0",
+        "laravel/pint": "^1.13",
         "vlucas/phpdotenv": "^5.5"
+    },
+    "suggest": {
+        "phpunit/phpunit": "Required for Sms::fake() assertions in tests"
     },
     "autoload": {
         "psr-4": {
@@ -34,6 +67,10 @@
             "Alizeinodin\\SmsApi\\Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "test": "phpunit --exclude-group sandbox,network",
+        "test:sandbox": "phpunit --group sandbox"
+    },
     "extra": {
         "laravel": {
             "providers": [
@@ -44,9 +81,11 @@
             }
         }
     },
-    "scripts": {
-        "test": "phpunit",
-        "test:sandbox": "phpunit --group sandbox"
+    "config": {
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": false
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true
