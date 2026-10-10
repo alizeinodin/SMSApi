@@ -9,6 +9,9 @@
             "email": "alizeinodin79@gmail.com"
         }
     ],
+    "replace": {
+        "alizne/smsapi": "self.version"
+    },
     "require": {
         "php": "^8.1",
         "ext-curl": "*",
