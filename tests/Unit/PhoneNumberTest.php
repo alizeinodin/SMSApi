@@ -4,13 +4,12 @@ namespace Alizeinodin\SmsApi\Tests\Unit;
 
 use Alizeinodin\SmsApi\Exceptions\InvalidPhoneNumberException;
 use Alizeinodin\SmsApi\Support\PhoneNumber;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class PhoneNumberTest extends TestCase
 {
-    /**
-     * @dataProvider localProvider
-     */
+    #[DataProvider('localProvider')]
     public function test_it_normalizes_to_local_format(string $input, string $expected): void
     {
         $this->assertSame($expected, PhoneNumber::normalize($input, [

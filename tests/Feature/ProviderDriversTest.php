@@ -33,14 +33,14 @@ use Alizeinodin\SmsApi\Drivers\SmsIrDriver;
 use Alizeinodin\SmsApi\Registry\DriverRegistry;
 use Alizeinodin\SmsApi\SmsManager;
 use Alizeinodin\SmsApi\Tests\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class ProviderDriversTest extends TestCase
 {
     /**
-     * @dataProvider providerDriverProvider
-     *
      * @param  class-string  $class
      */
+    #[DataProvider('providerDriverProvider')]
     public function test_builtin_provider_drivers_can_be_created(string $type, string $class, array $config): void
     {
         $driver = DriverRegistry::make($type, $config);

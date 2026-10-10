@@ -51,7 +51,7 @@
     "require-dev": {
         "orchestra/testbench": "^8.0|^9.0|^10.0",
         "phpunit/phpunit": "^10.0|^11.0",
-        "laravel/pint": "^1.32",
+        "laravel/pint": "^1.13",
         "vlucas/phpdotenv": "^5.5"
     },
     "suggest": {
@@ -79,6 +79,12 @@
             "aliases": {
                 "Sms": "Alizeinodin\\SmsApi\\Facades\\Sms"
             }
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": false
         }
     },
     "minimum-stability": "stable",
