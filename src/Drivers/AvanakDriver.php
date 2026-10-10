@@ -66,7 +66,7 @@ class AvanakDriver extends AbstractDriver
         $payload = [
             'Length' => $length,
             'Number' => $mobile,
-            'OptionalCode' => $code !== '' ? (int) $code : 0,
+            'OptionalCode' => $code !== '' ? $code : '0',
             'ServerID' => (int) ($options['server_id'] ?? $this->config('server_id', 0)),
         ];
 
@@ -80,7 +80,14 @@ class AvanakDriver extends AbstractDriver
 
     public function getCredit(): SendResult
     {
-        throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
+        return $this->toAvanakResponse($this->avanakFormRequest('AccountStatus', []), credit: true);
+    }
+
+    public function getMessage(int $messageId): SendResult
+    {
+        return $this->toAvanakResponse($this->avanakFormRequest('GetQuickSend', [
+            'QuickSendID' => $messageId,
+        ]));
     }
 
     public function cancelScheduled(string $packId): SendResult
@@ -162,9 +169,20 @@ class AvanakDriver extends AbstractDriver
     /**
      * @param  array<string, mixed>  $raw
      */
-    private function toAvanakResponse(array $raw, bool $otp = false): SendResult
+    private function toAvanakResponse(array $raw, bool $otp = false, bool $credit = false): SendResult
     {
         $quickSendId = $raw['QuickSendID'] ?? $raw['quickSendId'] ?? $raw['status'] ?? null;
+
+        if ($credit) {
+            return new SendResult(
+                success: true,
+                message: (string) ($raw['Message'] ?? 'OK'),
+                data: $raw,
+                driver: $this->getName(),
+                raw: $raw,
+                statusCode: 200,
+            );
+        }
 
         return new SendResult(
             success: $quickSendId === null || (int) $quickSendId > 0,
