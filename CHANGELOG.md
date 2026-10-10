@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (v2.0.0)
+## v2.0.0 - 2026-10-10
 
 ### Breaking
 - Package rename: `alizne/smsapi` → `alizeinodin/smsapi`
