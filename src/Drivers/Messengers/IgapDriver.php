@@ -47,7 +47,7 @@ class IgapDriver extends AbstractMessengerDriver
      */
     private static function makeClient(array $config): Client
     {
-        $token = rawurlencode((string) ($config['bot_token'] ?? ''));
+        $token = rawurlencode((string) ($config['bot_token'] ?? $config['token'] ?? ''));
 
         return new Client([
             'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://bot.igap.net'), '/').'/bot'.$token.'/',
@@ -63,7 +63,7 @@ class IgapDriver extends AbstractMessengerDriver
      */
     private function botRequest(string $method, array $payload): array
     {
-        if ((string) $this->config('bot_token', '') === '') {
+        if ((string) $this->config('bot_token', $this->config('token', '')) === '') {
             throw new SmsApiException('iGap bot_token is not configured.');
         }
 
