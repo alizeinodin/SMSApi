@@ -37,47 +37,89 @@ class IppanelDriver extends AbstractDriver
 
     public function send(string|array $mobiles, string $message, array $options = []): SendResult
     {
-        $mobiles = $this->normalizeMobiles($mobiles);
+        $mobiles = array_map(
+            fn (string $m): string => $this->toInternational($m),
+            $this->normalizeMobiles($mobiles),
+        );
 
         if ($mobiles === []) {
             throw new SmsApiException('At least one mobile number is required.');
         }
 
-        if (count($mobiles) === 1) {
-            return $this->toIppanelResponse($this->ippanelRequest('POST', 'sms/send/webservice/single', [
-                'originator' => $this->resolveOriginator($options),
-                'recipient' => $this->toInternational($mobiles[0]),
-                'message' => $message,
-            ]));
-        }
+        $originator = $this->resolveOriginator($options);
 
-        return $this->bulk($message, $mobiles, $options);
+        // Official SDK posts sender + recipient[] to the single endpoint for any count.
+        return $this->toIppanelResponse($this->ippanelRequest('POST', 'sms/send/webservice/single', [
+            'sender' => $originator,
+            'recipient' => array_values($mobiles),
+            'message' => $message,
+            'description' => [
+                'summary' => (string) ($options['summary'] ?? 'smsapi'),
+                'count_recipient' => (string) count($mobiles),
+            ],
+        ]));
     }
 
     public function bulk(string $message, array $mobiles, array $options = []): SendResult
     {
-        $mobiles = array_map(fn (string $m): string => $this->toInternational($m), $this->normalizeMobiles($mobiles));
-
-        return $this->toIppanelResponse($this->ippanelRequest('POST', 'sms/send/webservice', [
-            'originator' => $this->resolveOriginator($options),
-            'recipients' => array_values($mobiles),
-            'message' => $message,
-        ]));
+        return $this->send($mobiles, $message, $options);
     }
 
     public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
+        $mobile = $this->toInternational($this->normalizeMobiles($mobile)[0] ?? $mobile);
+
         return $this->toIppanelResponse($this->ippanelRequest('POST', 'sms/pattern/normal/send', [
             'code' => (string) $templateId,
             'sender' => $this->resolveOriginator($options),
-            'recipient' => $this->toInternational($mobile),
+            'recipient' => $mobile,
             'variable' => $this->mapPatternVariables($parameters),
         ]));
     }
 
     public function getCredit(): SendResult
     {
-        return $this->toIppanelResponse($this->ippanelRequest('GET', 'user'));
+        return $this->toIppanelResponse($this->ippanelRequest('GET', 'sms/accounting/credit/show'));
+    }
+
+    public function getMessage(int $messageId): SendResult
+    {
+        return $this->toIppanelResponse($this->ippanelRequest('GET', 'sms/message/all', [
+            'message_id' => $messageId,
+        ]));
+    }
+
+    public function getLatestReceived(int $count = 100): SendResult
+    {
+        return $this->toIppanelResponse($this->ippanelRequest('GET', 'inbox', [
+            'page' => 1,
+            'per_page' => $count,
+        ]));
+    }
+
+    public function getLiveReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->toIppanelResponse($this->ippanelRequest('GET', 'inbox', [
+            'page' => $pageNumber,
+            'per_page' => $pageSize,
+        ]));
+    }
+
+    public function getArchivedReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        ?int $fromDate = null,
+        ?int $toDate = null,
+    ): SendResult {
+        return $this->toIppanelResponse($this->ippanelRequest('GET', 'inbox', [
+            'page' => $pageNumber,
+            'per_page' => $pageSize,
+        ]));
     }
 
     public function cancelScheduled(string $packId): SendResult
@@ -90,6 +132,8 @@ class IppanelDriver extends AbstractDriver
      */
     private static function makeClient(array $config): Client
     {
+        $apiKey = (string) ($config['api_key'] ?? '');
+
         return new Client([
             'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api2.ippanel.com/api/v1'), '/').'/',
             'timeout' => (float) ($config['timeout'] ?? 30),
@@ -97,7 +141,9 @@ class IppanelDriver extends AbstractDriver
             'headers' => [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'AccessKey '.(string) ($config['api_key'] ?? ''),
+                // Edge panels use AccessKey; the official SDK also sends apikey.
+                'Authorization' => 'AccessKey '.$apiKey,
+                'apikey' => $apiKey,
             ],
         ]);
     }
