@@ -10,6 +10,9 @@ class SmsIrDriver extends AbstractDriver
 {
     use Concerns\HasProviderIdentity;
 
+    /** Official sms.ir Sandbox verify template (parameter name: Code). */
+    public const SANDBOX_TEMPLATE_ID = 123456;
+
     /**
      * @param  array<string, mixed>  $config
      */
@@ -72,6 +75,14 @@ class SmsIrDriver extends AbstractDriver
         ]);
 
         return $this->toResponse($raw);
+    }
+
+    /**
+     * Send via sms.ir official Sandbox verify template (API key type: Sandbox).
+     */
+    public function sendSandboxVerify(string $mobile, string $code = '12345'): SendResult
+    {
+        return $this->sendTemplate($mobile, self::SANDBOX_TEMPLATE_ID, ['Code' => $code]);
     }
 
     public function cancelScheduled(string $packId): SendResult

@@ -98,10 +98,6 @@ class WhatsAppDriver extends AbstractMessengerDriver
 
     private function normalizeWhatsAppRecipient(string $recipient): string
     {
-        if (preg_match('/^\d+$/', $recipient)) {
-            return $recipient;
-        }
-
         return PhoneNumber::normalize($recipient, ['format' => 'digits', 'country_code' => '98']);
     }
 }

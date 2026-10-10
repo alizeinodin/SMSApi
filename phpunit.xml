@@ -12,7 +12,16 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
     </testsuites>
+    <groups>
+        <exclude>
+            <group>sandbox</group>
+            <group>network</group>
+        </exclude>
+    </groups>
     <source>
         <include>
             <directory>src</directory>

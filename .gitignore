@@ -18,6 +18,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+!.env.sandbox.example
 composer.lock
 
 /build/
