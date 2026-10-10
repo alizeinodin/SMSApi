@@ -38,8 +38,13 @@ class GapDriver extends AbstractMessengerDriver
             'chat_id' => $chatId,
             'type' => (string) ($options['type'] ?? 'TEXT'),
             'text' => $message,
-        ], static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400
-            && (($decoded['success'] ?? false) === true || ($decoded['status'] ?? null) === 'success'));
+        ], static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400 && (
+            ($decoded['success'] ?? false) === true
+            || ($decoded['status'] ?? null) === 'success'
+            || ($decoded['ok'] ?? false) === true
+            || isset($decoded['message_id'])
+            || isset($decoded['id'])
+        ));
 
         return $this->toMessengerResponse($raw, $raw['message_id'] ?? $raw['data']['message_id'] ?? null);
     }
