@@ -105,7 +105,7 @@ class PanelSandboxTest extends TestCase
                 'code' => '12345',
             ]);
         } else {
-            $result = $instance->send($mobile, 'sandbox test from alizeinodin/smsapi');
+            $result = $instance->send($mobile, 'sandbox test from alizne/smsapi');
         }
 
         $this->assertTrue(

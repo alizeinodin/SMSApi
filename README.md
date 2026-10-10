@@ -3,7 +3,7 @@
 Laravel package for Iranian SMS panels (sms.ir, Kavenegar, Ghasedak, Farazsms, IPPanel, Magfa, Niksms, …).
 
 ```bash
-composer require alizeinodin/smsapi
+composer require alizne/smsapi
 php artisan vendor:publish --tag=smsapi-config
 ```
 
