@@ -2,12 +2,10 @@
 
 namespace Alizeinodin\SmsApi\Drivers;
 
-use Alizeinodin\SmsApi\Drivers\Concerns\FlattensTemplateParameters;
 use Alizeinodin\SmsApi\Drivers\Concerns\HasProviderIdentity;
 use Alizeinodin\SmsApi\Drivers\Concerns\ResolvesSenderLine;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
-use Alizeinodin\SmsApi\Exceptions\UnsupportedDriverMethodException;
 use GuzzleHttp\Client;
 
 /**
@@ -17,7 +15,6 @@ use GuzzleHttp\Client;
  */
 class FarazsmsDriver extends AbstractDriver
 {
-    use FlattensTemplateParameters;
     use HasProviderIdentity;
     use ResolvesSenderLine;
 
@@ -58,18 +55,11 @@ class FarazsmsDriver extends AbstractDriver
 
     public function sendTemplate(string $mobile, int|string $templateId, array $parameters = [], array $options = []): SendResult
     {
-        $attributes = [];
-        foreach ($this->flattenTemplateParameters($parameters) as $index => $value) {
-            $attributes['param'.($index + 1)] = $value;
-        }
-
-        if (isset($parameters['CODE']) || isset($parameters['code'])) {
-            $attributes['code'] = (string) ($parameters['CODE'] ?? $parameters['code']);
-        }
+        $attributes = $this->patternAttributes($parameters);
 
         return $this->toFarazResponse($this->farazRequest('POST', 'ws/v1/sms/pattern', [
             'code' => (string) $templateId,
-            'recipient' => $mobile,
+            'recipient' => $this->normalizeMobiles($mobile)[0] ?? $mobile,
             'attributes' => $attributes !== [] ? $attributes : (object) [],
             'line_number' => $this->resolveSenderLine($options),
             'number_format' => (string) ($options['number_format'] ?? 'english'),
@@ -78,12 +68,88 @@ class FarazsmsDriver extends AbstractDriver
 
     public function getCredit(): SendResult
     {
-        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/wallet/balance'));
+        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/account/balance'));
     }
 
+    public function getLines(): SendResult
+    {
+        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/lines/accessible'));
+    }
+
+    public function getMessage(int $messageId): SendResult
+    {
+        return $this->toFarazResponse($this->farazRequest('GET', "ws/v1/send_request/{$messageId}"));
+    }
+
+    public function getLiveSends(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/send_request', [
+            'page' => $pageNumber,
+            'per_page' => $pageSize,
+        ]));
+    }
+
+    /**
+     * Send requests are served from a single list, so archived sends page the same endpoint.
+     */
+    public function getArchivedSends(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        ?int $fromDate = null,
+        ?int $toDate = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/send_request', [
+            'page' => $pageNumber,
+            'per_page' => $pageSize,
+        ]));
+    }
+
+    public function getLatestReceived(int $count = 100): SendResult
+    {
+        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/inbox', [
+            'page' => 1,
+            'per_page' => $count,
+        ]));
+    }
+
+    public function getLiveReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        bool $sortByNewest = false,
+    ): SendResult {
+        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/inbox', [
+            'page' => $pageNumber,
+            'per_page' => $pageSize,
+        ]));
+    }
+
+    public function getArchivedReceived(
+        int $pageNumber = 1,
+        int $pageSize = 100,
+        ?string $mobile = null,
+        ?int $fromDate = null,
+        ?int $toDate = null,
+    ): SendResult {
+        return $this->toFarazResponse($this->farazRequest('GET', 'ws/v1/inbox', [
+            'page' => $pageNumber,
+            'per_page' => $pageSize,
+        ]));
+    }
+
+    /**
+     * The only cancellable resource in the API is a location based (LBS) campaign,
+     * so $packId is expected to be an lbsId.
+     */
     public function cancelScheduled(string $packId): SendResult
     {
-        throw new UnsupportedDriverMethodException($this->getName(), __FUNCTION__);
+        return $this->toFarazResponse($this->farazRequest('PATCH', "ws/v1/lbs/{$packId}/cancel"));
     }
 
     /**
@@ -121,6 +187,35 @@ class FarazsmsDriver extends AbstractDriver
             static fn (array $decoded, int $httpStatus): bool => $httpStatus < 400
                 && strtolower((string) ($decoded['status'] ?? '')) === 'success',
         );
+    }
+
+    /**
+     * Pattern variables are addressed by name; positional parameters fall back to param1…paramN.
+     *
+     * @param  array<string, string>|array<int, array{name: string, value: string}>  $parameters
+     * @return array<string, string>
+     */
+    private function patternAttributes(array $parameters): array
+    {
+        if ($parameters === []) {
+            return [];
+        }
+
+        if (array_is_list($parameters) && isset($parameters[0]['name'])) {
+            $attributes = [];
+            foreach ($parameters as $item) {
+                $attributes[(string) $item['name']] = (string) ($item['value'] ?? '');
+            }
+
+            return $attributes;
+        }
+
+        $attributes = [];
+        foreach ($parameters as $key => $value) {
+            $attributes[is_int($key) ? 'param'.($key + 1) : (string) $key] = (string) $value;
+        }
+
+        return $attributes;
     }
 
     /**
