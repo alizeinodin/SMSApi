@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.1 - 2026-10-10
+
+### Fixed
+- Packagist package name confirmed as `alizne/smsapi` (same listing as v1)
+
 ## v2.0.0 - 2026-10-10
 
 ### Breaking
