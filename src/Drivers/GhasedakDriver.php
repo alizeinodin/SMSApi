@@ -205,7 +205,8 @@ class GhasedakDriver extends AbstractDriver
     {
         return new Client([
             'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.ghasedak.me/v2'), '/').'/',
-            'timeout' => (float) ($config['timeout'] ?? 30),
+            'timeout' => self::requestTimeout($config),
+            'connect_timeout' => self::connectTimeout($config),
             'http_errors' => false,
             'headers' => [
                 'Accept' => 'application/json',
@@ -244,11 +245,7 @@ class GhasedakDriver extends AbstractDriver
         try {
             $response = $this->client->request($method, ltrim($uri, '/'), $options);
         } catch (GuzzleException $e) {
-            throw new SmsApiException(
-                sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
-                (int) $e->getCode(),
-                previous: $e,
-            );
+            throw $this->transportException($e);
         }
 
         $body = (string) $response->getBody();

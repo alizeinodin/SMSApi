@@ -1,24 +1,27 @@
 # SMSApi
 
+[فارسی](README.fa.md)
+
+![SMSApi v2.2 banner for Laravel 10–12 and PHP 8.1+, with Iranian SMS providers and messenger logos](art/banner.png)
+
 [![Tests](https://github.com/alizeinodin/SMSApi/actions/workflows/tests.yml/badge.svg)](https://github.com/alizeinodin/SMSApi/actions/workflows/tests.yml)
 [![Latest Version](https://img.shields.io/packagist/v/alizeinodin/smsapi.svg?style=flat-square)](https://packagist.org/packages/alizeinodin/smsapi)
 [![Total Downloads](https://img.shields.io/packagist/dt/alizeinodin/smsapi.svg?style=flat-square)](https://packagist.org/packages/alizeinodin/smsapi)
 [![License](https://img.shields.io/packagist/l/alizeinodin/smsapi.svg?style=flat-square)](LICENSE)
 
-‫پکیج لاراول ارسال پیامک برای پنل‌های پیامکی ایرانی. با این پکیج می‌توانید از **sms.ir**، **کاوه‌نگار**، **قاصدک**، **ملی‌پیامک**، **فراز اس‌ام‌اس**، **مگفا**، **آی‌پی‌پنل**، **نیک اس‌ام‌اس**، **مدیانا**، **آوانک**، **لیمو اس‌ام‌اس**، **آموت**، **فراپیامک**، **پیامیتو**، **پیامک‌نوین**، **بهمن‌پیام**، **پیام‌رسان**، **بهین‌پیام**، **راستین اس‌ام‌اس** و سایر پنل‌های پیامکی ایرانی، با یک API یکسان پیامک ارسال کنید.‬
-‫‬
+Laravel package for Iranian SMS panels. One API covers **sms.ir**, **Kavenegar**, **Ghasedak**, **Melipayamak**, **Farazsms**, **Magfa**, **IPPanel**, **Niksms**, **Mediana**, **Avanak**, **LimoSMS**, **Amoot**, **Farapayamak**, **Payamito**, **Payamaknovin**, **Bahmanpayam**, **Payamresan**, **Behinpayam**, **Rastinsms**, and other Iranian panels.
 
-‫علاوه بر پیامک، پیام‌رسان‌هایی مثل **تلگرام**، **واتساپ**، **بله**، **ایتا**، **روبیکا**، **گپ** و **آی‌گپ** هم پشتیبانی می‌شوند. 
+It also sends through **Telegram**, **WhatsApp**, **Bale**, **Eitaa**, **Rubika**, **Gap**, and **iGap**.
 
-‫‬
-‫با استفاده از این پکیج می‌توانید توسعه اپلیکیشن خودتان را با امکاناتی مثل ارسال otp به صورت اتوماتیک، یا استفاده از چندین پنل‌پیامکی با قابلیت failover  و... تسریع کنید.‬
+Use it to ship OTP delivery, multi-panel failover, and the rest of the outbound flow without a one-off client per provider.
 
 ```bash
 composer require alizeinodin/smsapi
 ```
+
 ---
 
-## نصب
+## Install
 
 ```bash
 composer require alizeinodin/smsapi
@@ -33,14 +36,14 @@ SMSAPI_API_KEY=your-api-key
 SMSAPI_LINE_NUMBER=30007
 ```
 
-برای توسعهٔ لوکال بدون پنل واقعی:
+Local development without a real panel:
 
 ```env
 SMSAPI_DRIVER=array
 ```
 
-‫قابلیت‌های اختیاری (Logger، OTP Vault، Rate Limiter، Webhook) پیش‌فرض خاموش‌اند:‬
-‫‬
+Optional features (logging, OTP vault, rate limiter, webhook) are off until you install them:
+
 ```bash
 php artisan smsapi:install logging
 php artisan smsapi:install otp
@@ -50,45 +53,45 @@ php artisan smsapi:install all
 
 ---
 
-## استفاده
+## Usage
 
 ```php
 use Alizeinodin\SmsApi\Facades\Sms;
 
-Sms::send('09121234567', 'سفارش شما ثبت شد.');
+Sms::send('09121234567', 'Your order was placed.');
 ```
 
-### چند ارائه‌دهنده (Failover)
+### Failover
 
 ```php
-Sms::failover(['smsir', 'kavenegar'])->send('09121234567', 'سلام');
+Sms::failover(['smsir', 'kavenegar'])->send('09121234567', 'Hello');
 ```
 
-‫یا در `.env`:‬
-‫‬
+Or in `.env`:
+
 ```env
 SMSAPI_DRIVER=failover
 SMSAPI_FAILOVER_DRIVERS=smsir,kavenegar
 ```
 
-### استفاده از 
+A read timeout does not mean the provider rejected the message. The panel may already have accepted it, so failing over — or retrying the queue job — can send the same SMS twice. The default request timeout is 10 seconds and the connect timeout is 5 seconds. Keep the queue job timeout greater than `timeout × number of failover drivers`.
 
-‫ابتدا در `config/smsapi.php` قالب را تعریف کنید، بعد با نام منطقی ارسال کنید:‬
-‫‬
+### Templates
+
+Define the template in `config/smsapi.php`, then send it by logical name:
+
 ```php
 Sms::template('otp-login')->to($user)->send(['CODE' => '12345']);
 
-// ایمیل به‌جای پیامک (یا هر دو)
+// Email instead of SMS, or both
 Sms::otp('otp-login')->to($user)->mail()->send(['CODE' => '12345']);
 Sms::otp('otp-login')->to($user)->both()->send(['CODE' => '12345']);
 ```
 
-> ‫`Sms::otp()` فقط **ارسال** می‌کند. کد OTP را خودتان باید بسازید.‬
+> `Sms::otp()` only **delivers**. You still generate the OTP code yourself.
 
-### OTP Vault — ساخت و بررسی کد
+### OTP vault — issue and check a code
 
-‫به جای اینکه منطق OTP را خودتان پیاده‌سازی کنید، می‌توانید از دستور زیر استفاده کنید، با این کار اپلیکیشن خودش کد را می‌سازد، به صورت امن نگهداری می‌کند و چک می‌کند:‬
-‫‬
 ```bash
 php artisan smsapi:install otp
 ```
@@ -99,9 +102,9 @@ Sms::challenge('login')->template('otp-login')->to($user)->send();
 Sms::challenge('login')->check($user, $request->input('code'));
 ```
 
-‫کد به‌صورت HMAC ذخیره می‌شود (نه plaintext)، با انقضا و سقف تعداد تلاش.‬
-‫‬
-### صف
+The code is stored as an HMAC (not plaintext), with an expiry and an attempt limit.
+
+### Queues
 
 ```php
 Sms::queue('otp')->sendTemplate('09121234567', 'otp-login', ['CODE' => '12345']);
@@ -110,7 +113,7 @@ Sms::template('otp-login')->to($user)->queue('otp')->send(['CODE' => '12345']);
 Sms::template('otp-login')->to($user)->sync()->send(['CODE' => '12345']);
 ```
 
-### نوتیفیکیشن لاراول
+### Laravel notifications
 
 ```php
 use Alizeinodin\SmsApi\Notifications\NotificationMessage;
@@ -127,12 +130,12 @@ public function toSms($notifiable): NotificationMessage
 }
 ```
 
-### تست
+### Tests
 
 ```php
 Sms::fake();
 
-Sms::send('09121234567', 'تست');
+Sms::send('09121234567', 'test');
 
 Sms::assertSentTo('09121234567');
 Sms::assertNothingSent();
@@ -140,86 +143,86 @@ Sms::assertNothingSent();
 
 ---
 
-## درایورهای پشتیبانی‌شده
+## Supported drivers
 
-‫کلید ستون «config» همان مقداری است که در `SMSAPI_DRIVER` یا `Sms::driver('…')` می‌گذارید.‬
-‫‬
-### پیامک (ایران)
+The config key is what you set as `SMSAPI_DRIVER` or pass to `Sms::driver('…')`.
 
-| کانفیگ | ارائه‌دهنده |
-|--------|-------------|
+### SMS (Iran)
+
+| Config | Provider |
+|--------|----------|
 | `smsir` | sms.ir |
-| `kavenegar` | کاوه‌نگار (Kavenegar) |
-| `ghasedak` | قاصدک (Ghasedak) |
-| `melipayamak` | ملی‌پیامک (Melipayamak) |
-| `farazsms` | فراز اس‌ام‌اس (Farazsms) |
-| `magfa` | مگفا (Magfa) |
-| `ippanel` | آی‌پی‌پنل (IPPanel) |
-| `niksms` | نیک اس‌ام‌اس (Niksms) |
-| `mediana` | مدیانا (Mediana) |
-| `limosms` | لیمو اس‌ام‌اس (Limosms) |
-| `avanak` | آوانک — پیامک صوتی (Avanak) |
-| `amoot` | آموت (Amoot) |
-| `farapayamak` | فراپیامک (Farapayamak) |
-| `payamito` | پیامیتو (Payamito) |
-| `payamaknovin` | پیامک‌نوین (Payamaknovin) |
-| `bahmanpayam` | بهمن‌پیام (Bahmanpayam) |
-| `payamresan` | پیام‌رسان (Payamresan) |
-| `behinpayam` | بهین‌پیام (Behinpayam) |
-| `rastinsms` | راستین اس‌ام‌اس (Rastinsms) |
+| `kavenegar` | Kavenegar |
+| `ghasedak` | Ghasedak |
+| `melipayamak` | Melipayamak |
+| `farazsms` | Farazsms |
+| `magfa` | Magfa |
+| `ippanel` | IPPanel |
+| `niksms` | Niksms |
+| `mediana` | Mediana |
+| `limosms` | LimoSMS |
+| `avanak` | Avanak (voice) |
+| `amoot` | Amoot |
+| `farapayamak` | Farapayamak |
+| `payamito` | Payamito |
+| `payamaknovin` | Payamaknovin |
+| `bahmanpayam` | Bahmanpayam |
+| `payamresan` | Payamresan |
+| `behinpayam` | Behinpayam |
+| `rastinsms` | Rastinsms |
 
-### پیام‌رسان‌ها
+### Messengers
 
-| کانفیگ | سرویس |
-|--------|--------|
-| `telegram` | تلگرام (Telegram) |
-| `whatsapp` | واتساپ (WhatsApp) |
-| `bale` | بله (Bale) |
-| `eitaa` | ایتا (Eitaa) |
-| `rubika` | روبیکا (Rubika) |
-| `gap` | گپ (Gap) |
-| `igap` | آی‌گپ (iGap) |
-| `messenger` | فیسبوک مسنجر (Facebook Messenger) |
-| `viber` | وایبر (Viber) |
-| `line` | لاین (LINE) |
-| `discord` | دیسکورد (Discord) |
-| `slack` | اسلک (Slack) |
+| Config | Service |
+|--------|---------|
+| `telegram` | Telegram |
+| `whatsapp` | WhatsApp |
+| `bale` | Bale |
+| `eitaa` | Eitaa |
+| `rubika` | Rubika |
+| `gap` | Gap |
+| `igap` | iGap |
+| `messenger` | Facebook Messenger |
+| `viber` | Viber |
+| `line` | LINE |
+| `discord` | Discord |
+| `slack` | Slack |
 
-### ابزار توسعه
+### Local
 
-| کانفیگ | کاربرد |
-|--------|--------|
-| `array` | حافظه — مناسب تست و لوکال |
-| `log` | نوشتن در لاگ لاراول |
-| `failover` | زنجیرهٔ چند درایور (تعویض خودکار هنگام خطا) |
+| Config | Use |
+|--------|-----|
+| `array` | In-memory driver for tests and local work |
+| `log` | Writes to the Laravel log |
+| `failover` | Tries several drivers and moves on when one fails |
 
-‫تنظیمات هر درایور در `config/smsapi.php` و مستندات Wiki آمده است.‬
-‫‬
----
-
-## چه کارهایی پوشش داده می‌شود؟
-
-| نیاز                           | پشتیبانی |
-|--------------------------------|----------|
-| ارسال ساده / گروهی             | ✓ |
-| قالب به ازای هر پنل            | ✓ |
-| تعویض خودکار پنل هنگام خطا     | ✓ |
-| چند حساب / چند خط روی یک پنل   | ✓ |
-| صف و تلاش مجدد                 | ✓ |
-| ‫ارسال OTP با ایمیل‬           | ✓ |
-| ‫ساخت و بررسی OTP (Vault)‬     | ✓ اختیاری |
-| ‫کانال Notification لاراول‬    | ✓ |
-| نرمال‌سازی شماره ایران         | ✓ |
-| لاگ ارسال‌ها                   | ✓ اختیاری |
-| وضعیت تحویل (Webhook)          | ✓ اختیاری |
-| Rate Limiter و Circuit Breaker | ✓ اختیاری |
-| HTTP API برای ارسال            | ✓ اختیاری |
-| پیام‌رسان‌ها                   | ✓ |
-| `Sms::fake()` در تست           | ✓ |
+Per-driver settings live in `config/smsapi.php` and the wiki.
 
 ---
 
-## تنظیمات پرکاربرد
+## What it covers
+
+| Need | Supported |
+|------|-----------|
+| Simple and bulk send | Yes |
+| A template id per panel | Yes |
+| Failover when a panel errors | Yes |
+| Several accounts or lines on one panel | Yes |
+| Queues and retries | Yes |
+| OTP by email | Yes |
+| Issue and check OTP (vault) | Optional |
+| Laravel notification channel | Yes |
+| Iranian number normalization | Yes |
+| Send logs | Optional |
+| Delivery status (webhook) | Optional |
+| Rate limiter and circuit breaker | Optional |
+| HTTP API for sending | Optional |
+| Messengers | Yes |
+| `Sms::fake()` in tests | Yes |
+
+---
+
+## Common settings
 
 ```env
 SMSAPI_DRIVER=smsir
@@ -227,6 +230,8 @@ SMSAPI_API_KEY=
 SMSAPI_LINE_NUMBER=
 
 SMSAPI_FAILOVER_DRIVERS=smsir,kavenegar
+SMSAPI_TIMEOUT=10
+SMSAPI_CONNECT_TIMEOUT=5
 
 SMSAPI_PHONE_FORMAT=local          # local | e164 | digits
 SMSAPI_OTP_CHANNEL=sms             # sms | mail | both
@@ -237,10 +242,18 @@ SMSAPI_LOGGING_ENABLED=false
 
 ---
 
-## مستندات
+## HTTP API and webhooks
 
-‫مستندات کامل به **انگلیسی** در GitHub Wiki:‬
-‫‬
+Both are off until you install them. After that, send the token in a header (`X-SMSAPI-Token` or `X-SMSAPI-Webhook-Token`, or `Authorization: Bearer`). `?token=` is ignored unless `SMSAPI_API_ALLOW_QUERY_TOKEN` / `SMSAPI_WEBHOOK_ALLOW_QUERY_TOKEN=true`. A webhook with no token is closed (`SMSAPI_WEBHOOK_REQUIRE_TOKEN` defaults to true). The send route is throttled at 60 requests per minute unless `SMSAPI_API_THROTTLE` is empty.
+
+Provider API keys and bot tokens are removed from HTTP exception text before it is stored in `sms_logs`. The send API returns a generic error and does not echo exception text.
+
+---
+
+## Docs
+
+Full English notes are also on the GitHub wiki:
+
 **https://github.com/alizeinodin/SMSApi/wiki**
 
 - [Home](https://github.com/alizeinodin/SMSApi/wiki)
@@ -259,7 +272,7 @@ SMSAPI_LOGGING_ENABLED=false
 
 ---
 
-## تغییرات و مجوز
+## Changes and license
 
-- تغییرات نسخه‌ها: [CHANGELOG.md](CHANGELOG.md)
-- مجوز: [MIT](LICENSE)
+- Release notes: [CHANGELOG.md](CHANGELOG.md)
+- License: [MIT](LICENSE)

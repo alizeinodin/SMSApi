@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
@@ -43,7 +44,7 @@ class SmsIrSandboxDriverTest extends TestCase
         $this->assertSame(99, $result->data['messageId'] ?? null);
         $this->assertCount(1, $history);
 
-        /** @var \GuzzleHttp\Psr7\Request $request */
+        /** @var Request $request */
         $request = $history[0]['request'];
         $this->assertSame('POST', $request->getMethod());
         $this->assertStringContainsString('send/verify', (string) $request->getUri());

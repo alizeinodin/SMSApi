@@ -158,6 +158,8 @@ class InstallCommand extends Command
         $this->patchConfigValue("env('SMSAPI_DELIVERY_SYNC_ENABLED', false)", "env('SMSAPI_DELIVERY_SYNC_ENABLED', true)");
 
         $this->line('  ✓ webhook route + delivery sync enabled');
+        $this->line('  → set SMSAPI_WEBHOOK_TOKEN (required unless SMSAPI_WEBHOOK_REQUIRE_TOKEN=false)');
+        $this->line('  → send it as X-SMSAPI-Webhook-Token or Authorization: Bearer, not ?token=');
         $this->line('  → POST /'.config('smsapi.webhook.path', 'smsapi/webhooks/delivery'));
         $this->line('  → php artisan smsapi:sync-delivery');
     }

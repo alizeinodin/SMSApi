@@ -163,7 +163,8 @@ abstract class PayamakPanelDriver extends AbstractDriver
     {
         return new Client([
             'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://rest.payamak-panel.com/api'), '/').'/',
-            'timeout' => (float) ($config['timeout'] ?? 30),
+            'timeout' => self::requestTimeout($config),
+            'connect_timeout' => self::connectTimeout($config),
             'http_errors' => false,
             'headers' => ['Accept' => 'application/json'],
         ]);
@@ -213,11 +214,7 @@ abstract class PayamakPanelDriver extends AbstractDriver
                 $asJson ? ['json' => $form] : ['form_params' => $form],
             );
         } catch (GuzzleException $e) {
-            throw new SmsApiException(
-                sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
-                (int) $e->getCode(),
-                previous: $e,
-            );
+            throw $this->transportException($e);
         }
 
         $body = (string) $response->getBody();

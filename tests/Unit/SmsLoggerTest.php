@@ -3,6 +3,7 @@
 namespace Alizeinodin\SmsApi\Tests\Unit;
 
 use Alizeinodin\SmsApi\DTOs\SendResult;
+use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use Alizeinodin\SmsApi\Logging\SmsLogger;
 use Alizeinodin\SmsApi\Models\SmsLog;
 use Alizeinodin\SmsApi\Tests\TestCase;
@@ -56,6 +57,26 @@ class SmsLoggerTest extends TestCase
         $this->assertSame(1, SmsLog::query()->count());
         $this->assertSame('sent', SmsLog::query()->first()->status);
         $this->assertSame('42', SmsLog::query()->first()->message_id);
+    }
+
+    public function test_logger_strips_secrets_from_exception_text(): void
+    {
+        $this->createSmsLogsTable();
+        $this->app['config']->set('smsapi.logging.enabled', true);
+
+        $secret = 'super-secret-key';
+
+        (new SmsLogger)->log(
+            'send',
+            new SmsApiException('failed for https://api.example.com/v1/'.$secret.'/sms/send.json'),
+            '09123456789',
+            'hello',
+        );
+
+        $message = (string) SmsLog::query()->first()->message;
+
+        $this->assertStringNotContainsString($secret, $message);
+        $this->assertStringNotContainsString('https://', $message);
     }
 
     protected function createSmsLogsTable(): void

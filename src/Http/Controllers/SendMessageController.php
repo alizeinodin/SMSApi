@@ -35,11 +35,10 @@ class SendMessageController extends Controller
                 'driver' => $response->driver,
                 'data' => $response->data,
             ]);
-        } catch (SmsApiException $e) {
+        } catch (SmsApiException) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
-                'code' => $e->getCode(),
+                'message' => 'The message could not be sent.',
             ], 422);
         }
     }

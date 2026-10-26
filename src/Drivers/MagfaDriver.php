@@ -127,7 +127,8 @@ class MagfaDriver extends AbstractDriver
 
         return new Client([
             'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://sms.magfa.com/api/http/sms/v2'), '/').'/',
-            'timeout' => (float) ($config['timeout'] ?? 30),
+            'timeout' => self::requestTimeout($config),
+            'connect_timeout' => self::connectTimeout($config),
             'http_errors' => false,
             'auth' => [$username.'/'.$domain, $password],
             'headers' => [

@@ -2,6 +2,8 @@
 
 namespace Alizeinodin\SmsApi\Resilience;
 
+use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 
 class CircuitBreaker
@@ -56,8 +58,10 @@ class CircuitBreaker
             return;
         }
 
-        $this->cache->forget($this->failuresKey($driver));
-        $this->cache->forget($this->openedKey($driver));
+        $this->exclusive($driver, function () use ($driver): void {
+            $this->cache->forget($this->failuresKey($driver));
+            $this->cache->forget($this->openedKey($driver));
+        });
     }
 
     public function recordFailure(string $driver): void
@@ -66,13 +70,32 @@ class CircuitBreaker
             return;
         }
 
-        $key = $this->failuresKey($driver);
-        $failures = (int) $this->cache->get($key, 0) + 1;
-        $this->cache->put($key, $failures, $this->openSeconds() * 2);
+        $this->exclusive($driver, function () use ($driver): void {
+            $key = $this->failuresKey($driver);
+            $failures = (int) $this->cache->get($key, 0) + 1;
+            $this->cache->put($key, $failures, $this->openSeconds() * 2);
 
-        if ($failures >= $this->failureThreshold()) {
-            $this->cache->put($this->openedKey($driver), time(), $this->openSeconds());
-            $this->cache->forget($key);
+            if ($failures >= $this->failureThreshold()) {
+                $this->cache->put($this->openedKey($driver), time(), $this->openSeconds());
+                $this->cache->forget($key);
+            }
+        });
+    }
+
+    private function exclusive(string $driver, callable $callback): void
+    {
+        $store = method_exists($this->cache, 'getStore') ? $this->cache->getStore() : null;
+
+        if (! $store instanceof LockProvider) {
+            $callback();
+
+            return;
+        }
+
+        try {
+            $store->lock($this->lockKey($driver), 5)->block(3, $callback);
+        } catch (LockTimeoutException) {
+            $callback();
         }
     }
 
@@ -94,5 +117,10 @@ class CircuitBreaker
     private function openedKey(string $driver): string
     {
         return "smsapi:circuit:{$driver}:opened_at";
+    }
+
+    private function lockKey(string $driver): string
+    {
+        return "smsapi:circuit:{$driver}:lock";
     }
 }

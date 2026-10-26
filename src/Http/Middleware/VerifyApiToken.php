@@ -2,6 +2,7 @@
 
 namespace Alizeinodin\SmsApi\Http\Middleware;
 
+use Alizeinodin\SmsApi\Support\ConfigBoolean;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,7 +15,7 @@ class VerifyApiToken
             return response()->json(['message' => 'API disabled.'], 404);
         }
 
-        if (! (bool) config('smsapi.api.require_token', true)) {
+        if (! ConfigBoolean::get(config('smsapi.api.require_token', true), true)) {
             return $next($request);
         }
 
@@ -27,8 +28,12 @@ class VerifyApiToken
         $provided = (string) (
             $request->header('X-SMSAPI-Token')
             ?: $request->header('Authorization')
-            ?: $request->query('token', '')
+            ?: ''
         );
+
+        if ($provided === '' && ConfigBoolean::get(config('smsapi.api.allow_query_token', false))) {
+            $provided = (string) $request->query('token', '');
+        }
 
         if (str_starts_with($provided, 'Bearer ')) {
             $provided = trim(substr($provided, 7));
