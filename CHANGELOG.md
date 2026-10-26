@@ -23,13 +23,13 @@ Everything on `master` since `v2.1.0`, plus the release fixes below. Tagged `v2.
 
 ### Changed
 
-- Minimum Laravel is **10** (PHP **8.1+**). Laravel 9 is no longer supported.
+- Supported Laravel versions: **10, 11, 12, and 13** (PHP **8.1+**; Laravel 13 requires PHP 8.3+). Laravel 9 is not supported.
 - Default HTTP request timeout is **10s** (was 30s). Override with `SMSAPI_TIMEOUT` or a per-driver timeout.
 - Public API, relative to the legacy `SMSApi` client: `verify()` → `sendTemplate()` (no alias), `likeToLike()` → `sendMapped()`, `SmsResponse` → `SendResult`, facade `SMSApi` → `Sms`, config `SMSApi` → `smsapi`
 - Further renames on this line: `message()` / `messagePolicies()` → `policy()` / `policies()`, `sms()` → `smsDriver()`, `assertVerified` → `assertTemplateSent`, `PendingSms` → `QueuedSend`, `PendingMessage` → `PolicySend`, `PendingTemplate` → `TemplateSend`, `SmsMessage` → `NotificationMessage`, `LogDriver` → `LogTransport`, `LoggingDriver` → `PersistingLogDriver`, `OtpMail` / `OtpMailer` → `TemplateMail` / `TemplateMailer`
 - Composer `replace` for the legacy Packagist name `alizne/smsapi`
 - Circuit breaker failure/success updates run inside a cache lock
-- CI runs Pint (`pint --test`) and includes PHP 8.4
+- CI runs Pint (`pint --test`), PHPStan via Larastan level 5 (`phpstan-baseline.neon`), and includes PHP 8.4 and Laravel 13
 
 ### Security
 

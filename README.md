@@ -9,7 +9,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/alizeinodin/smsapi.svg?style=flat-square)](https://packagist.org/packages/alizeinodin/smsapi)
 [![License](https://img.shields.io/packagist/l/alizeinodin/smsapi.svg?style=flat-square)](LICENSE)
 
-Laravel package for Iranian SMS panels. One API covers **sms.ir**, **Kavenegar**, **Ghasedak**, **Melipayamak**, **Farazsms**, **Magfa**, **IPPanel**, **Niksms**, **Mediana**, **Avanak**, **LimoSMS**, **Amoot**, **Farapayamak**, **Payamito**, **Payamaknovin**, **Bahmanpayam**, **Payamresan**, **Behinpayam**, **Rastinsms**, and other Iranian panels.
+Laravel package for Iranian SMS panels. Supports Laravel 10–13 on PHP 8.1+ (Laravel 13 requires PHP 8.3+). The banner graphic still says Laravel 10–12. One API covers **sms.ir**, **Kavenegar**, **Ghasedak**, **Melipayamak**, **Farazsms**, **Magfa**, **IPPanel**, **Niksms**, **Mediana**, **Avanak**, **LimoSMS**, **Amoot**, **Farapayamak**, **Payamito**, **Payamaknovin**, **Bahmanpayam**, **Payamresan**, **Behinpayam**, **Rastinsms**, and other Iranian panels.
 
 It also sends through **Telegram**, **WhatsApp**, **Bale**, **Eitaa**, **Rubika**, **Gap**, and **iGap**.
 
@@ -249,6 +249,8 @@ Both are off until you install them. After that, send the token in a header (`X-
 Provider API keys and bot tokens are removed from HTTP exception text before it is stored in `sms_logs`. The send API returns a generic error and does not echo exception text.
 
 ---
+
+Static analysis: `vendor/bin/phpstan analyse` (Larastan, level 5, with `phpstan-baseline.neon`).
 
 ## Docs
 
