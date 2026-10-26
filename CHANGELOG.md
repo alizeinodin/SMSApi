@@ -5,72 +5,96 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.2.0] - 2026-10-26
+
+Everything on `master` since `v2.1.0`, plus the release fixes below. Tagged `v2.0.0`, `v2.0.1`, and `v2.1.0` did not include this stack.
 
 ### Added
 
-- `SmsIrDriver::sendSandboxVerify()` helper for the official sms.ir Sandbox verify template
-- Optional live panel sandbox tests (`composer test:sandbox`, `.env.sandbox.example`)
-- Composer `replace` for legacy Packagist name `alizne/smsapi`
-
-### Fixed
-
-- WhatsApp Cloud API recipients: local Iranian numbers (`09…`) are sent as international digits (`98…`)
-- CI matrix: allow `laravel/pint` on PHP 8.1/8.2 and do not block installs of older Laravel majors on Packagist advisories
-- PHPUnit 12 readiness: replace `@dataProvider` doc-comments with attributes
-- Tests force SQLite `:memory:` so Laravel 10 CI cells do not attempt MySQL
-- Raise PHPUnit (`^10.5`) / Testbench (`^8.22`) floors so prefer-lowest CI accepts current `phpunit.xml`
-
-## [2.0.0] - 2026-09-12
-
-Major rewrite (`alizeinodin/smsapi`, namespace `Alizeinodin\SmsApi`).
-
-Legacy tags `v1.0.0` / `v1.0.1` belong to the previous package lineage and are **not** API-compatible with this release.
-
-### Added
-
-- Multi-driver manager with named connections, failover, and decorator stack (normalize, templates, resilience, logging, events)
-- Contract split: `MessageDriver`, `MessengerDriver`, `SmsSender` / `SmsDriver`, plus wallet / reports / inbox interfaces
-- Iranian SMS drivers: sms.ir, Kavenegar, Ghasedak, Melipayamak, Farazsms, Magfa, IPPanel, Niksms, Mediana, Limosms, Avanak, Amoot, Farapayamak, Payamito, Payamaknovin, Bahmanpayam, Payamresan, Behinpayam, Rastinsms
-- Messenger drivers: Telegram, WhatsApp, Bale, Eitaa, Rubika, Gap, iGap, Facebook Messenger, Viber, LINE, Discord, Slack
-- Template registry and message-type policies (`Sms::policy()`)
-- OTP delivery via SMS and/or mail (`Sms::template()` / `Sms::otp()`)
-- Optional OTP vault: `Sms::challenge()` (HMAC store, TTL, attempts, throttle)
-- Queue helpers (`Sms::queue()`, retries / backoff)
-- Laravel `sms` notification channel and `Sms::fake()` testing helpers
-- Optional HTTP send API, delivery webhook, balance alerts
-- Modular install: `php artisan smsapi:install {logging|delivery|api|messaging|balance|resilience|otp|all}`
-- GitHub Actions CI (PHP 8.1–8.3 × Laravel 10–12) and tag-based releases
-- English documentation on the [GitHub Wiki](https://github.com/alizeinodin/SMSApi/wiki)
+- Multi-driver manager with named connections, failover, and a decorator stack (normalize, templates, resilience, logging, events)
+- Contract split: `MessageDriver`, `MessengerDriver`, `SmsSender` / `SmsDriver`, plus wallet, reports, and inbox interfaces
+- Template registry, message-type policies (`Sms::policy()`), and fluent senders (`TemplateSend`, `QueuedSend`, `PolicySend`)
+- OTP delivery via SMS and/or mail, and an optional OTP vault (`Sms::challenge()`)
+- Queue helpers, Laravel `sms` notification channel, and `Sms::fake()`
+- Optional HTTP send API, delivery webhook, balance alerts, and `smsapi:install`
+- Provider report methods added on master after 2.1.0 (`sendMapped`, inbox/outbox, lines, credit)
+- `SmsIrDriver::sendSandboxVerify()` and optional live panel sandbox tests
+- HTTP `connect_timeout` (default 5s) alongside the request timeout
 
 ### Changed
 
-- Public API redesigned around `Sms` facade + `SmsManager`
-- Fluent send builders live under `Alizeinodin\SmsApi\Pending\` (`TemplateSend`, `QueuedSend`, `PolicySend`)
-- `SmsManager` responsibilities split into concerns (fluent senders, fake/assertions, decoration, config)
-- Supported Laravel versions: **10 / 11 / 12** (PHP **8.1+**)
-- License clarified as **MIT**
+- Minimum Laravel is **10** (PHP **8.1+**). Laravel 9 is no longer supported.
+- Default HTTP request timeout is **10s** (was 30s). Override with `SMSAPI_TIMEOUT` or a per-driver timeout.
+- Public API, relative to the legacy `SMSApi` client: `verify()` → `sendTemplate()` (no alias), `likeToLike()` → `sendMapped()`, `SmsResponse` → `SendResult`, facade `SMSApi` → `Sms`, config `SMSApi` → `smsapi`
+- Further renames on this line: `message()` / `messagePolicies()` → `policy()` / `policies()`, `sms()` → `smsDriver()`, `assertVerified` → `assertTemplateSent`, `PendingSms` → `QueuedSend`, `PendingMessage` → `PolicySend`, `PendingTemplate` → `TemplateSend`, `SmsMessage` → `NotificationMessage`, `LogDriver` → `LogTransport`, `LoggingDriver` → `PersistingLogDriver`, `OtpMail` / `OtpMailer` → `TemplateMail` / `TemplateMailer`
+- Composer `replace` for the legacy Packagist name `alizne/smsapi`
+- Circuit breaker failure/success updates run inside a cache lock
+- CI runs Pint (`pint --test`) and includes PHP 8.4
 
-### Breaking
+### Security
 
-- Facade `SMSApi` → `Sms`
-- Config key / file `SMSApi` → `smsapi` (`config/smsapi.php`)
-- `verify()` → `sendTemplate()` (no alias)
-- `likeToLike()` → `sendMapped()`
-- `message($type)` / `messagePolicies()` → `policy($type)` / `policies()`
-- Manager `sms()` → `smsDriver()`
-- `assertVerified` → `assertTemplateSent`
-- Class renames: `SmsResponse` → `SendResult`, `PendingSms` → `QueuedSend`, `PendingMessage` → `PolicySend`, `PendingTemplate` → `TemplateSend`, `SmsMessage` → `NotificationMessage`, `LogDriver` → `LogTransport`, `LoggingDriver` → `PersistingLogDriver`, Facebook `MessengerDriver` → `FacebookMessengerDriver`, `OtpMail` / `OtpMailer` → `TemplateMail` / `TemplateMailer`
-- Mail view: `smsapi::mail.template`
-- `otp()` remains only as a thin alias of `template()` (delivery, not the vault)
+- Drivers that put an API key or bot token in the URL (Kavenegar, Telegram, Bale, Rubika, iGap, and the shared HTTP client) no longer copy Guzzle's URL into exception text, and the original Guzzle exception is not chained
+- `sms_logs.message` strips URLs and credential query values
+- `POST /smsapi/messages` returns `The message could not be sent.` and does not echo exception text
+- Delivery webhooks require a token by default. Set `SMSAPI_WEBHOOK_REQUIRE_TOKEN=false` only if you intentionally want the old open webhook
+- API and webhook tokens are read from headers, not `?token=`. Set `SMSAPI_API_ALLOW_QUERY_TOKEN` or `SMSAPI_WEBHOOK_ALLOW_QUERY_TOKEN=true` to keep the old query parameter
+- The send API uses `throttle:60,1` unless `SMSAPI_API_THROTTLE` is empty
 
 ### Fixed
 
-- Logging off by default when `smsapi.logging.enabled` is missing
-- Queue defaults read from `smsapi.queue.default`
-- `SmsRateLimiter` injects `Illuminate\Cache\RateLimiter` (no static facade)
-- `getProvider()` available on sender contracts
-- Event listener failures are reported without breaking outbound sends
-- OTP vault: atomic consume, shared recipient resolution, sync-by-default (queue opt-in), redact of sensitive params in logs
+- WhatsApp recipients: local Iranian numbers (`09…`) are sent as international digits (`98…`)
+- CI installs for PHP 8.1/8.2 and Laravel 10/11, SQLite `:memory:` in tests, and PHPUnit / Testbench floors for prefer-lowest
+- Broken README heading for template usage
+- English `README.md`, with the Persian guide at `README.fa.md`
 
+A read timeout is not proof the provider rejected the message. Failing over, or retrying the queue job, after a read timeout can send the same SMS twice. Keep the job timeout greater than `timeout × failover drivers`. Connection failures are safe to retry; read timeouts are not.
+
+## [2.1.0] - 2026-10-10
+
+### Breaking
+
+- Packagist / Composer package rename: `alizne/smsapi` → `alizeinodin/smsapi`
+- `replace` includes `alizne/smsapi` so existing installs can migrate
+
+## [2.0.1] - 2026-10-10
+
+### Fixed
+
+- Interim release that kept the Packagist name `alizne/smsapi` until the rename in v2.1.0
+
+## [2.0.0] - 2026-10-10
+
+### Breaking
+
+- Composer package published as `alizne/smsapi` (renamed in v2.1.0)
+- Namespace: `Alizne\SmsApi` → `Alizeinodin\SmsApi`
+- Replaced the legacy RestfulSms.com client with a multi-driver architecture (sms.ir API v1, Iranian panels, messengers)
+- Config file: `config/SMSApi.php` → `config/smsapi.php`
+- Removed the `SMSAPI_SECRET_KEY` / token exchange flow for sms.ir
+
+### Added
+
+- Drivers: sms.ir, Kavenegar, Ghasedak, Farazsms/IPPanel, Magfa, Niksms, Mediana, LimoSMS, Melipayamak family, sms-webservice V3 family, Avanak
+- Messengers: Telegram, WhatsApp, Bale, Eitaa, Rubika, Gap, iGap, Messenger, Viber, LINE, Discord, Slack
+- `Sms` facade and `SmsManager`
+- Sandbox integration tests (`@group sandbox`) and official SDK contract tests
+
+### Fixed
+
+- LICENSE aligned with MIT
+- WhatsApp recipient formatting uses international digits (`98…`)
+- Ghasedak, IPPanel, Mediana, and LimoSMS request contracts matched to official SDKs
+- Gap `sendMessage` sends required `type=text`
+- API error messages read `description`, `error`, and `status_message`
+- Empty HTTP 200 bodies (for example LINE) no longer throw invalid JSON
+
+### Changed
+
+- WhatsApp Cloud API `sendTemplate()` (name, language, body components)
+- Facebook Messenger: configurable `messaging_type`, `tag`, and `notification_type`
+- Slack, Discord, and LINE: optional richer payload fields via `$options`
+
+[2.2.0]: https://github.com/alizeinodin/SMSApi/releases/tag/v2.2.0
+[2.1.0]: https://github.com/alizeinodin/SMSApi/releases/tag/v2.1.0
+[2.0.1]: https://github.com/alizeinodin/SMSApi/releases/tag/v2.0.1
 [2.0.0]: https://github.com/alizeinodin/SMSApi/releases/tag/v2.0.0

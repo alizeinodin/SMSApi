@@ -16,6 +16,11 @@ use Throwable;
  * Try providers in order until one succeeds (outbound only).
  *
  * Wallet / reports / inbox calls use the first configured provider only.
+ *
+ * A read timeout is not proof the provider rejected the message. Failing over
+ * (or letting the queue job retry) after a read timeout can deliver the same
+ * SMS twice. Keep each provider's `timeout` short, and keep the queue job
+ * timeout greater than timeout × the number of drivers in the chain.
  */
 class FailoverDriver implements SmsDriver
 {

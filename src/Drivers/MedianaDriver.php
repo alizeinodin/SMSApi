@@ -81,7 +81,8 @@ class MedianaDriver extends AbstractDriver
     {
         return new Client([
             'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.mediana.ir'), '/').'/',
-            'timeout' => (float) ($config['timeout'] ?? 30),
+            'timeout' => self::requestTimeout($config),
+            'connect_timeout' => self::connectTimeout($config),
             'http_errors' => false,
             'headers' => [
                 'Accept' => 'application/json',

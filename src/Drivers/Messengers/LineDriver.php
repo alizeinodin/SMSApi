@@ -45,7 +45,7 @@ class LineDriver extends AbstractMessengerDriver
                 ],
             ]);
         } catch (GuzzleException $e) {
-            throw new SmsApiException('LINE request failed: '.$e->getMessage(), (int) $e->getCode(), previous: $e);
+            throw $this->transportException($e);
         }
 
         $body = (string) $response->getBody();
@@ -69,7 +69,8 @@ class LineDriver extends AbstractMessengerDriver
     {
         return new Client([
             'base_uri' => rtrim((string) ($config['base_url'] ?? 'https://api.line.me/v2/bot'), '/').'/',
-            'timeout' => (float) ($config['timeout'] ?? 30),
+            'timeout' => self::requestTimeout($config),
+            'connect_timeout' => self::connectTimeout($config),
             'http_errors' => false,
             'headers' => [
                 'Accept' => 'application/json',

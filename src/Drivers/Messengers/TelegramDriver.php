@@ -51,7 +51,8 @@ class TelegramDriver extends AbstractMessengerDriver
 
         return new Client([
             'base_uri' => 'https://api.telegram.org/bot'.$token.'/',
-            'timeout' => (float) ($config['timeout'] ?? 30),
+            'timeout' => self::requestTimeout($config),
+            'connect_timeout' => self::connectTimeout($config),
             'http_errors' => false,
             'headers' => ['Accept' => 'application/json'],
         ]);

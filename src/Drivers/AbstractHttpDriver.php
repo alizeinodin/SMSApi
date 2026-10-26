@@ -5,6 +5,7 @@ namespace Alizeinodin\SmsApi\Drivers;
 use Alizeinodin\SmsApi\Contracts\MessageDriver;
 use Alizeinodin\SmsApi\DTOs\SendResult;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
+use Alizeinodin\SmsApi\Support\SecretRedactor;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Arr;
@@ -60,7 +61,8 @@ abstract class AbstractHttpDriver implements MessageDriver
 
         return new Client([
             'base_uri' => $baseUri,
-            'timeout' => (float) ($this->config['timeout'] ?? 30),
+            'timeout' => self::requestTimeout($this->config),
+            'connect_timeout' => self::connectTimeout($this->config),
             'http_errors' => false,
             'headers' => array_merge([
                 'Accept' => 'application/json',
@@ -96,11 +98,7 @@ abstract class AbstractHttpDriver implements MessageDriver
         try {
             $response = $this->client->request($method, ltrim($uri, '/'), $options);
         } catch (GuzzleException $e) {
-            throw new SmsApiException(
-                sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
-                (int) $e->getCode(),
-                previous: $e,
-            );
+            throw $this->transportException($e);
         }
 
         $body = (string) $response->getBody();
@@ -147,5 +145,57 @@ abstract class AbstractHttpDriver implements MessageDriver
     protected function config(string $key, mixed $default = null): mixed
     {
         return Arr::get($this->config, $key, $default);
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    protected static function requestTimeout(array $config): float
+    {
+        if (isset($config['timeout']) && is_numeric($config['timeout'])) {
+            return (float) $config['timeout'];
+        }
+
+        return self::httpDefault('smsapi.http.timeout', 10.0);
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    protected static function connectTimeout(array $config): float
+    {
+        if (isset($config['connect_timeout']) && is_numeric($config['connect_timeout'])) {
+            return (float) $config['connect_timeout'];
+        }
+
+        return self::httpDefault('smsapi.http.connect_timeout', 5.0);
+    }
+
+    /**
+     * Guzzle exception text includes the full URL. Never chain that exception.
+     */
+    protected function transportException(GuzzleException $e): SmsApiException
+    {
+        $safe = SecretRedactor::fromConfig($this->config)->redact($e->getMessage());
+
+        return new SmsApiException(
+            sprintf('HTTP request via [%s] failed: %s', $this->getName(), $safe),
+            (int) $e->getCode(),
+        );
+    }
+
+    private static function httpDefault(string $key, float $default): float
+    {
+        if (! function_exists('config')) {
+            return $default;
+        }
+
+        try {
+            $value = config($key);
+        } catch (\Throwable) {
+            return $default;
+        }
+
+        return is_numeric($value) ? (float) $value : $default;
     }
 }

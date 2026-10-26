@@ -8,6 +8,7 @@ use Alizeinodin\SmsApi\Exceptions\FailoverException;
 use Alizeinodin\SmsApi\Exceptions\SmsApiException;
 use Alizeinodin\SmsApi\Models\SmsLog;
 use Alizeinodin\SmsApi\Support\ConfigBoolean;
+use Alizeinodin\SmsApi\Support\SecretRedactor;
 use Alizeinodin\SmsApi\Support\SensitiveData;
 use Illuminate\Support\Arr;
 use Throwable;
@@ -52,7 +53,7 @@ class SmsLogger
                 'parameters' => $context['parameters'] ?? null,
                 'status' => 'failed',
                 'delivery_status' => null,
-                'message' => $result->getMessage(),
+                'message' => SecretRedactor::scrub($result->getMessage()),
                 'response' => is_array($exceptionResponse) ? $this->redactParameters($exceptionResponse) : $exceptionResponse,
                 'attempts' => $result instanceof FailoverException
                     ? $result->attempts
@@ -77,7 +78,7 @@ class SmsLogger
             'message_id' => $this->extractMessageId($data),
             'pack_id' => $this->extractPackId($data),
             'delivery_status' => $result->success ? DeliveryStatus::PENDING : null,
-            'message' => $result->message,
+            'message' => SecretRedactor::scrub($result->message),
             'response' => $response,
             'attempts' => $result->attempts !== [] ? $result->attempts : null,
             'cost' => $this->extractCost($result->data),

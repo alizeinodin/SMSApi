@@ -202,8 +202,9 @@ abstract class AbstractDriver extends AbstractHttpDriver implements SmsDriver
     }
 
     /**
-     * @param string|array<int, string> $mobiles
+     * @param  string|array<int, string>  $mobiles
      * @return array<int, string>
+     *
      * @throws InvalidPhoneNumberException
      */
     protected function normalizeMobiles(string|array $mobiles): array

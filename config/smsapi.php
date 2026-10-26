@@ -28,6 +28,10 @@ return [
         ))),
         'token' => env('SMSAPI_API_TOKEN'),
         'require_token' => env('SMSAPI_API_REQUIRE_TOKEN', true),
+        // Query-string tokens show up in access logs. Headers only, unless opted in.
+        'allow_query_token' => env('SMSAPI_API_ALLOW_QUERY_TOKEN', false),
+        // Empty string disables the default limiter. Format: "max,minutes".
+        'throttle' => env('SMSAPI_API_THROTTLE', '60,1'),
     ],
 
     /*
@@ -79,6 +83,9 @@ return [
     'queue' => [
         'connection' => env('SMSAPI_QUEUE_CONNECTION'),
         'default' => env('SMSAPI_QUEUE_DEFAULT', 'default'),
+        // Job timeout must exceed http.timeout × failover length. A read timeout
+        // can mean the provider already accepted the message; retrying the job
+        // or failing over to the next driver may send a duplicate.
         'tries' => env('SMSAPI_QUEUE_TRIES', 3),
         'timeout' => env('SMSAPI_QUEUE_TIMEOUT', 60),
         'backoff' => [10, 30, 60],
@@ -321,6 +328,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | HTTP client defaults
+    |--------------------------------------------------------------------------
+    |
+    | Per-driver `timeout` / `connect_timeout` override these. A read timeout
+    | is ambiguous: the provider may already have accepted the message, so
+    | failover or a queue retry can double-send. Connection timeouts are safe
+    | to retry. Size queue job timeouts above timeout × failover drivers.
+    |
+    */
+    'http' => [
+        'timeout' => env('SMSAPI_TIMEOUT', 10),
+        'connect_timeout' => env('SMSAPI_CONNECT_TIMEOUT', 5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Outbound logging
     |--------------------------------------------------------------------------
     */
@@ -343,7 +366,9 @@ return [
         'path' => env('SMSAPI_WEBHOOK_PATH', 'smsapi/webhooks/delivery'),
         'middleware' => ['api'],
         'token' => env('SMSAPI_WEBHOOK_TOKEN'),
-        'require_token' => env('SMSAPI_WEBHOOK_REQUIRE_TOKEN', false),
+        // Closed unless a token is set. Set SMSAPI_WEBHOOK_REQUIRE_TOKEN=false to restore an open webhook.
+        'require_token' => env('SMSAPI_WEBHOOK_REQUIRE_TOKEN', true),
+        'allow_query_token' => env('SMSAPI_WEBHOOK_ALLOW_QUERY_TOKEN', false),
 
         'sync' => [
             'enabled' => env('SMSAPI_DELIVERY_SYNC_ENABLED', false),
@@ -422,7 +447,7 @@ return [
         //     'api_key' => env('SMSAPI_OTP_API_KEY'),
         //     'line_number' => env('SMSAPI_OTP_LINE'),
         //     'base_url' => env('SMSAPI_BASE_URL', 'https://api.sms.ir/v1'),
-        //     'timeout' => env('SMSAPI_TIMEOUT', 30),
+        //     'timeout' => env('SMSAPI_TIMEOUT', 10),
         // ],
         //
         // 'smsir-marketing' => [
@@ -430,7 +455,7 @@ return [
         //     'api_key' => env('SMSAPI_MARKETING_API_KEY'),
         //     'line_number' => env('SMSAPI_MARKETING_LINE'),
         //     'base_url' => env('SMSAPI_BASE_URL', 'https://api.sms.ir/v1'),
-        //     'timeout' => env('SMSAPI_TIMEOUT', 30),
+        //     'timeout' => env('SMSAPI_TIMEOUT', 10),
         // ],
 
     ],
@@ -463,21 +488,21 @@ return [
             'api_key' => env('SMSAPI_API_KEY'),
             'line_number' => env('SMSAPI_LINE_NUMBER'),
             'base_url' => env('SMSAPI_BASE_URL', 'https://api.sms.ir/v1'),
-            'timeout' => env('SMSAPI_TIMEOUT', 30),
+            'timeout' => env('SMSAPI_TIMEOUT', 10),
         ],
 
         'kavenegar' => [
             'api_key' => env('KAVENEGAR_API_KEY'),
             'line_number' => env('KAVENEGAR_LINE_NUMBER'),
             'base_url' => env('KAVENEGAR_BASE_URL', 'https://api.kavenegar.com/v1'),
-            'timeout' => env('KAVENEGAR_TIMEOUT', 30),
+            'timeout' => env('KAVENEGAR_TIMEOUT', 10),
         ],
 
         'ghasedak' => [
             'api_key' => env('GHASEDAK_API_KEY'),
             'line_number' => env('GHASEDAK_LINE_NUMBER'),
             'base_url' => env('GHASEDAK_BASE_URL', 'https://api.ghasedak.me/v2'),
-            'timeout' => env('GHASEDAK_TIMEOUT', 30),
+            'timeout' => env('GHASEDAK_TIMEOUT', 10),
         ],
 
         'melipayamak' => [
@@ -485,7 +510,7 @@ return [
             'password' => env('MELIPAYAMAK_PASSWORD'),
             'line_number' => env('MELIPAYAMAK_LINE_NUMBER'),
             'base_url' => env('MELIPAYAMAK_BASE_URL', 'https://rest.payamak-panel.com/api'),
-            'timeout' => env('MELIPAYAMAK_TIMEOUT', 30),
+            'timeout' => env('MELIPAYAMAK_TIMEOUT', 10),
         ],
 
         'farapayamak' => [
@@ -493,14 +518,14 @@ return [
             'password' => env('FARAPAYAMAK_PASSWORD'),
             'line_number' => env('FARAPAYAMAK_LINE_NUMBER'),
             'base_url' => env('FARAPAYAMAK_BASE_URL', 'https://rest.payamak-panel.com/api'),
-            'timeout' => env('FARAPAYAMAK_TIMEOUT', 30),
+            'timeout' => env('FARAPAYAMAK_TIMEOUT', 10),
         ],
 
         'payamresan' => [
             'api_key' => env('PAYAMRESAN_API_KEY'),
             'line_number' => env('PAYAMRESAN_LINE_NUMBER'),
             'base_url' => env('PAYAMRESAN_BASE_URL', 'https://api.sms-webservice.com/api/V3'),
-            'timeout' => env('PAYAMRESAN_TIMEOUT', 30),
+            'timeout' => env('PAYAMRESAN_TIMEOUT', 10),
         ],
 
         'magfa' => [
@@ -509,7 +534,7 @@ return [
             'domain' => env('MAGFA_DOMAIN', 'magfa'),
             'line_number' => env('MAGFA_LINE_NUMBER'),
             'base_url' => env('MAGFA_BASE_URL', 'https://sms.magfa.com/api/http/sms/v2'),
-            'timeout' => env('MAGFA_TIMEOUT', 30),
+            'timeout' => env('MAGFA_TIMEOUT', 10),
         ],
 
         'avanak' => [
@@ -517,7 +542,7 @@ return [
             'otp_length' => env('AVANAK_OTP_LENGTH', 5),
             'server_id' => env('AVANAK_SERVER_ID', 0),
             'base_url' => env('AVANAK_BASE_URL', 'https://portal.avanak.ir/rest'),
-            'timeout' => env('AVANAK_TIMEOUT', 30),
+            'timeout' => env('AVANAK_TIMEOUT', 10),
         ],
 
         'amoot' => [
@@ -525,7 +550,7 @@ return [
             'password' => env('AMOOT_PASSWORD'),
             'line_number' => env('AMOOT_LINE_NUMBER'),
             'base_url' => env('AMOOT_BASE_URL', 'https://rest.payamak-panel.com/api'),
-            'timeout' => env('AMOOT_TIMEOUT', 30),
+            'timeout' => env('AMOOT_TIMEOUT', 10),
         ],
 
         'payamito' => [
@@ -533,7 +558,7 @@ return [
             'password' => env('PAYAMITO_PASSWORD'),
             'line_number' => env('PAYAMITO_LINE_NUMBER'),
             'base_url' => env('PAYAMITO_BASE_URL', 'https://rest.payamak-panel.com/api'),
-            'timeout' => env('PAYAMITO_TIMEOUT', 30),
+            'timeout' => env('PAYAMITO_TIMEOUT', 10),
         ],
 
         'payamaknovin' => [
@@ -541,7 +566,7 @@ return [
             'password' => env('PAYAMAKNOVIN_PASSWORD'),
             'line_number' => env('PAYAMAKNOVIN_LINE_NUMBER'),
             'base_url' => env('PAYAMAKNOVIN_BASE_URL', 'https://rest.payamak-panel.com/api'),
-            'timeout' => env('PAYAMAKNOVIN_TIMEOUT', 30),
+            'timeout' => env('PAYAMAKNOVIN_TIMEOUT', 10),
         ],
 
         'bahmanpayam' => [
@@ -549,28 +574,28 @@ return [
             'password' => env('BAHMANPAYAM_PASSWORD'),
             'line_number' => env('BAHMANPAYAM_LINE_NUMBER'),
             'base_url' => env('BAHMANPAYAM_BASE_URL', 'https://rest.payamak-panel.com/api'),
-            'timeout' => env('BAHMANPAYAM_TIMEOUT', 30),
+            'timeout' => env('BAHMANPAYAM_TIMEOUT', 10),
         ],
 
         'behinpayam' => [
             'api_key' => env('BEHINPAYAM_API_KEY'),
             'line_number' => env('BEHINPAYAM_LINE_NUMBER'),
             'base_url' => env('BEHINPAYAM_BASE_URL', 'https://api.sms-webservice.com/api/V3'),
-            'timeout' => env('BEHINPAYAM_TIMEOUT', 30),
+            'timeout' => env('BEHINPAYAM_TIMEOUT', 10),
         ],
 
         'rastinsms' => [
             'api_key' => env('RASTINSMS_API_KEY'),
             'line_number' => env('RASTINSMS_LINE_NUMBER'),
             'base_url' => env('RASTINSMS_BASE_URL', 'https://api.sms-webservice.com/api/V3'),
-            'timeout' => env('RASTINSMS_TIMEOUT', 30),
+            'timeout' => env('RASTINSMS_TIMEOUT', 10),
         ],
 
         'farazsms' => [
             'api_key' => env('FARAZSMS_API_KEY'),
             'line_number' => env('FARAZSMS_LINE_NUMBER'),
             'base_url' => env('FARAZSMS_BASE_URL', 'https://api.iranpayamak.com'),
-            'timeout' => env('FARAZSMS_TIMEOUT', 30),
+            'timeout' => env('FARAZSMS_TIMEOUT', 10),
         ],
 
         'niksms' => [
@@ -578,34 +603,34 @@ return [
             'password' => env('NIKSMS_PASSWORD'),
             'line_number' => env('NIKSMS_LINE_NUMBER'),
             'base_url' => env('NIKSMS_BASE_URL', 'https://niksms.com/api/v2'),
-            'timeout' => env('NIKSMS_TIMEOUT', 30),
+            'timeout' => env('NIKSMS_TIMEOUT', 10),
         ],
 
         'limosms' => [
             'api_key' => env('LIMOSMS_API_KEY'),
             'line_number' => env('LIMOSMS_LINE_NUMBER'),
             'base_url' => env('LIMOSMS_BASE_URL', 'https://api.limosms.com'),
-            'timeout' => env('LIMOSMS_TIMEOUT', 30),
+            'timeout' => env('LIMOSMS_TIMEOUT', 10),
         ],
 
         'mediana' => [
             'api_key' => env('MEDIANA_API_KEY'),
             'line_number' => env('MEDIANA_LINE_NUMBER'),
             'base_url' => env('MEDIANA_BASE_URL', 'https://api.mediana.ir'),
-            'timeout' => env('MEDIANA_TIMEOUT', 30),
+            'timeout' => env('MEDIANA_TIMEOUT', 10),
         ],
 
         'ippanel' => [
             'api_key' => env('IPPANEL_API_KEY'),
             'line_number' => env('IPPANEL_LINE_NUMBER'),
             'base_url' => env('IPPANEL_BASE_URL', 'https://api2.ippanel.com/api/v1'),
-            'timeout' => env('IPPANEL_TIMEOUT', 30),
+            'timeout' => env('IPPANEL_TIMEOUT', 10),
         ],
 
         'telegram' => [
             'channel' => 'telegram',
             'bot_token' => env('TELEGRAM_BOT_TOKEN'),
-            'timeout' => env('TELEGRAM_TIMEOUT', 30),
+            'timeout' => env('TELEGRAM_TIMEOUT', 10),
         ],
 
         'whatsapp' => [
@@ -614,42 +639,42 @@ return [
             'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
             'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
             'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com'),
-            'timeout' => env('WHATSAPP_TIMEOUT', 30),
+            'timeout' => env('WHATSAPP_TIMEOUT', 10),
         ],
 
         'bale' => [
             'channel' => 'bale',
             'bot_token' => env('BALE_BOT_TOKEN'),
             'base_url' => env('BALE_BASE_URL', 'https://tapi.bale.ai/bot'),
-            'timeout' => env('BALE_TIMEOUT', 30),
+            'timeout' => env('BALE_TIMEOUT', 10),
         ],
 
         'eitaa' => [
             'channel' => 'eitaa',
             'token' => env('EITAA_TOKEN'),
             'base_url' => env('EITAA_BASE_URL', 'https://eitaayar.ir'),
-            'timeout' => env('EITAA_TIMEOUT', 30),
+            'timeout' => env('EITAA_TIMEOUT', 10),
         ],
 
         'rubika' => [
             'channel' => 'rubika',
             'bot_token' => env('RUBIKA_BOT_TOKEN'),
             'base_url' => env('RUBIKA_BASE_URL', 'https://botapi.rubika.ir/v3'),
-            'timeout' => env('RUBIKA_TIMEOUT', 30),
+            'timeout' => env('RUBIKA_TIMEOUT', 10),
         ],
 
         'gap' => [
             'channel' => 'gap',
             'token' => env('GAP_BOT_TOKEN'),
             'base_url' => env('GAP_BASE_URL', 'https://api.gap.im'),
-            'timeout' => env('GAP_TIMEOUT', 30),
+            'timeout' => env('GAP_TIMEOUT', 10),
         ],
 
         'igap' => [
             'channel' => 'igap',
             'bot_token' => env('IGAP_BOT_TOKEN'),
             'base_url' => env('IGAP_BOT_BASE_URL', 'https://bot.igap.net'),
-            'timeout' => env('IGAP_TIMEOUT', 30),
+            'timeout' => env('IGAP_TIMEOUT', 10),
         ],
 
         'messenger' => [
@@ -658,7 +683,7 @@ return [
             'page_id' => env('MESSENGER_PAGE_ID', 'me'),
             'api_version' => env('MESSENGER_API_VERSION', 'v21.0'),
             'base_url' => env('MESSENGER_BASE_URL', 'https://graph.facebook.com'),
-            'timeout' => env('MESSENGER_TIMEOUT', 30),
+            'timeout' => env('MESSENGER_TIMEOUT', 10),
         ],
 
         'viber' => [
@@ -666,14 +691,14 @@ return [
             'auth_token' => env('VIBER_AUTH_TOKEN'),
             'sender_name' => env('VIBER_SENDER_NAME', 'Bot'),
             'base_url' => env('VIBER_BASE_URL', 'https://chatapi.viber.com/pa'),
-            'timeout' => env('VIBER_TIMEOUT', 30),
+            'timeout' => env('VIBER_TIMEOUT', 10),
         ],
 
         'line' => [
             'channel' => 'line',
             'channel_access_token' => env('LINE_CHANNEL_ACCESS_TOKEN'),
             'base_url' => env('LINE_BASE_URL', 'https://api.line.me/v2/bot'),
-            'timeout' => env('LINE_TIMEOUT', 30),
+            'timeout' => env('LINE_TIMEOUT', 10),
         ],
 
         'discord' => [
@@ -681,14 +706,14 @@ return [
             'bot_token' => env('DISCORD_BOT_TOKEN'),
             'api_version' => env('DISCORD_API_VERSION', 'v10'),
             'base_url' => env('DISCORD_BASE_URL', 'https://discord.com/api'),
-            'timeout' => env('DISCORD_TIMEOUT', 30),
+            'timeout' => env('DISCORD_TIMEOUT', 10),
         ],
 
         'slack' => [
             'channel' => 'slack',
             'bot_token' => env('SLACK_BOT_TOKEN'),
             'base_url' => env('SLACK_BASE_URL', 'https://slack.com/api'),
-            'timeout' => env('SLACK_TIMEOUT', 30),
+            'timeout' => env('SLACK_TIMEOUT', 10),
         ],
 
         /*
@@ -713,7 +738,7 @@ return [
         |     'api_key' => env('KAVENEGAR_API_KEY'),
         |     'line_number' => env('KAVENEGAR_LINE_NUMBER'),
         |     'base_url' => 'https://api.kavenegar.com/v1',
-        |     'timeout' => 30,
+        |     'timeout' => 10,
         | ],
         */
 

@@ -69,11 +69,7 @@ abstract class AbstractMessengerDriver extends AbstractHttpDriver implements Mes
                 'form_params' => $payload,
             ]);
         } catch (GuzzleException $e) {
-            throw new SmsApiException(
-                sprintf('HTTP request via [%s] failed: %s', $this->getName(), $e->getMessage()),
-                (int) $e->getCode(),
-                previous: $e,
-            );
+            throw $this->transportException($e);
         }
 
         return $this->decodeResponse($response->getStatusCode(), (string) $response->getBody(), $isSuccessful);
