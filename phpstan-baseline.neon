@@ -1,0 +1,313 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Alizeinodin\\SmsApi\\Contracts\\MessageDriver\:\:getCredit\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Balance/BalanceMonitor.php
+
+		-
+			message: '#^Instanceof between \(Alizeinodin\\SmsApi\\Contracts\\MessengerDriver&Alizeinodin\\SmsApi\\Drivers\\NormalizingDriver\)\|Alizeinodin\\SmsApi\\Drivers\\FailoverDriver\|Alizeinodin\\SmsApi\\Drivers\\ResilienceDriver\|Alizeinodin\\SmsApi\\Drivers\\TemplateResolvingDriver and Alizeinodin\\SmsApi\\Drivers\\PersistingLogDriver will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: src/Concerns/DecoratesDrivers.php
+
+		-
+			message: '#^Instanceof between Alizeinodin\\SmsApi\\Drivers\\ArrayDriver\|Alizeinodin\\SmsApi\\Drivers\\LogTransport and Alizeinodin\\SmsApi\\Drivers\\NormalizingDriver will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: src/Concerns/DecoratesDrivers.php
+
+		-
+			message: '#^Instanceof between Alizeinodin\\SmsApi\\Drivers\\NormalizingDriver and Alizeinodin\\SmsApi\\Drivers\\TemplateResolvingDriver will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: src/Concerns/DecoratesDrivers.php
+
+		-
+			message: '#^Call to function method_exists\(\) with \$this\(Alizeinodin\\SmsApi\\SmsManager\) and ''forgetDrivers'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Concerns/InteractsWithSmsFake.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$driver\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Console/SyncDeliveryCommand.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$message_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Console/SyncDeliveryCommand.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$mobile\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Console/SyncDeliveryCommand.php
+
+		-
+			message: '#^Call to an undefined method Alizeinodin\\SmsApi\\Contracts\\MessageDriver\:\:getMessage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Console/SyncDeliveryCommand.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$message_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Delivery/DeliveryStatusUpdater.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$response\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Delivery/DeliveryStatusUpdater.php
+
+		-
+			message: '#^Parameter \#3 \$data of method Alizeinodin\\SmsApi\\Drivers\\ArrayDriver\:\:record\(\) expects array\<string, mixed\>\|null, list\<array\<string, string\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Drivers/ArrayDriver.php
+
+		-
+			message: '#^Offset ''value'' on array\{name\: string, value\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: src/Drivers/Concerns/FlattensTemplateParameters.php
+
+		-
+			message: '#^Call to an undefined method Alizeinodin\\SmsApi\\Contracts\\MessageDriver\:\:getLineNumber\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Drivers/FailoverDriver.php
+
+		-
+			message: '#^Call to an undefined method Alizeinodin\\SmsApi\\Contracts\\MessageDriver\:\:setLineNumber\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Drivers/FailoverDriver.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Drivers/FailoverDriver.php
+
+		-
+			message: '#^Property Alizeinodin\\SmsApi\\Drivers\\FailoverDriver\:\:\$config is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Drivers/FailoverDriver.php
+
+		-
+			message: '#^Offset ''value'' on array\{name\: string, value\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Drivers/GhasedakDriver.php
+
+		-
+			message: '#^Offset ''name'' on array\{name\: string, value\: string\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Drivers/KavenegarDriver.php
+
+		-
+			message: '#^Offset ''value'' on array\{name\: string, value\: string\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Drivers/KavenegarDriver.php
+
+		-
+			message: '#^Comparison operation "\<" between int\<min, 399\> and 400 is always true\.$#'
+			identifier: smaller.alwaysTrue
+			count: 1
+			path: src/Drivers/LimosmsDriver.php
+
+		-
+			message: '#^Method Alizeinodin\\SmsApi\\Drivers\\ObservingDriver\:\:resolveChannel\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: src/Drivers/ObservingDriver.php
+
+		-
+			message: '#^Constant Alizeinodin\\SmsApi\\Drivers\\ResilienceDriver\:\:OUTBOUND is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: src/Drivers/ResilienceDriver.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<array\{name\?\: string, value\?\: string\}\|string\> in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Drivers/SmsIrDriver.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$delivery_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/DeliveryWebhookController.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$message_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/DeliveryWebhookController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 4
+			path: src/Logging/SmsLogger.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Offset ''name'' on array\{name\: string, value\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Offset ''value'' on array\{name\: string, value\: string\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>mail" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: src/Mail/TemplateMailer.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$delivery_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/SmsLog.php
+
+		-
+			message: '#^Access to an undefined property Alizeinodin\\SmsApi\\Models\\SmsLog\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Models/SmsLog.php
+
+		-
+			message: '#^Method Alizeinodin\\SmsApi\\Notifications\\SmsChannel\:\:resolveDriver\(\) should return Alizeinodin\\SmsApi\\Contracts\\SmsDriver but returns Alizeinodin\\SmsApi\\Contracts\\MessageDriver\.$#'
+			identifier: return.type
+			count: 3
+			path: src/Notifications/SmsChannel.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Cache\\Repository\:\:lock\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Otp/CacheOtpStore.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Otp/CacheOtpStore.php
+
+		-
+			message: '#^Method Alizeinodin\\SmsApi\\Pending\\PolicySend\:\:client\(\) should return Alizeinodin\\SmsApi\\Contracts\\SmsDriver but returns Alizeinodin\\SmsApi\\Contracts\\MessageDriver\.$#'
+			identifier: return.type
+			count: 3
+			path: src/Pending/PolicySend.php
+
+		-
+			message: '#^Property Alizeinodin\\SmsApi\\Pending\\QueuedSend\:\:\$manager is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Pending/QueuedSend.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Pending/TemplateSend.php
+
+		-
+			message: '#^Method Alizeinodin\\SmsApi\\Pending\\TemplateSend\:\:client\(\) should return Alizeinodin\\SmsApi\\Contracts\\SmsDriver but returns Alizeinodin\\SmsApi\\Contracts\\MessageDriver\.$#'
+			identifier: return.type
+			count: 3
+			path: src/Pending/TemplateSend.php
+
+		-
+			message: '#^Method Alizeinodin\\SmsApi\\Pending\\TemplateSend\:\:looksLikeEmail\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Pending/TemplateSend.php
+
+		-
+			message: '#^Variable \$mailResponse on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Pending/TemplateSend.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Illuminate\\Contracts\\Cache\\Repository and ''getStore'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Resilience/CircuitBreaker.php
+
+		-
+			message: '#^Instanceof between Closure and Closure will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/SmsManager.php
+
+		-
+			message: '#^PHPDoc tag @extends contains generic type Illuminate\\Support\\Manager\<Alizeinodin\\SmsApi\\Contracts\\MessageDriver\> but class Illuminate\\Support\\Manager is not generic\.$#'
+			identifier: generics.notGeneric
+			count: 1
+			path: src/SmsManager.php
+
+		-
+			message: '#^Call to function is_scalar\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Support/PhoneNumber.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<non\-empty\-string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Support/PhoneNumber.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: src/Templates/TemplateRegistry.php
